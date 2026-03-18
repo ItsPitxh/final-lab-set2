@@ -292,6 +292,21 @@ async function doRegister() {
     });
     const data = await res.json();
     if (res.ok) {
+      // Auto-login immediately after register
+      try {
+        const loginRes = await fetch(`${AUTH}/api/auth/login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok) {
+          token = loginData.token;
+          localStorage.setItem('jwt_token', token);
+          initApp(loginData.user);
+          return;
+        }
+      } catch (_) {}
+      // Fallback: switch to login tab if auto-login fails
       showAuthMsg('✅ สมัครสมาชิกสำเร็จ กรุณา Login', 'success');
       switchAuthTab('login');
       document.getElementById('login-email').value = email;
