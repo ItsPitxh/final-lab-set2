@@ -3,105 +3,498 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔐 Task Board — Final Lab Sec2</title>
+  <title>📋 Task Board — Final Lab Sec2</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f172a; --surface: #1e293b; --surface2: #273448;
-      --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
-      --blue: #3b82f6; --green: #22c55e; --yellow: #f59e0b;
-      --red: #ef4444; --purple: #a855f7;
+      --bg:       #0a0f1e;
+      --surface:  #111827;
+      --surface2: #1a2235;
+      --surface3: #1f2d44;
+      --border:   #1e3a5f;
+      --border2:  #2a4a7f;
+      --text:     #e2e8f0;
+      --muted:    #6b7fa3;
+      --blue:     #3b82f6;
+      --blue2:    #2563eb;
+      --green:    #22c55e;
+      --yellow:   #f59e0b;
+      --red:      #ef4444;
+      --purple:   #a855f7;
+      --teal:     #14b8a6;
+      --glow:     rgba(59,130,246,0.15);
     }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── AUTH TABS ── */
-    #auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 2.5rem; width: 400px; }
-    .auth-logo { font-size: 2.5rem; text-align: center; margin-bottom: .5rem; }
-    .auth-title { font-size: 1.5rem; font-weight: 700; text-align: center; }
-    .auth-subtitle { color: var(--muted); font-size: .85rem; text-align: center; margin-bottom: 1.25rem; }
-    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
-    .auth-tab { padding: .5rem 1rem; background: none; border: none; color: var(--muted); cursor: pointer; font-size: .9rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-    .auth-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── AUTH PAGE ── */
+    #auth-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 60% 20%, rgba(59,130,246,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(168,85,247,0.06) 0%, transparent 50%),
+                  var(--bg);
+    }
+
+    .auth-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 420px;
+      padding: 1rem;
+    }
+
+    .auth-brand {
+      text-align: center;
+    }
+    .auth-brand .logo { font-size: 2.8rem; margin-bottom: .4rem; }
+    .auth-brand h1   { font-size: 1.6rem; font-weight: 800; letter-spacing: -.5px; }
+    .auth-brand p    { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03);
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: .75rem;
+      padding: .25rem;
+      margin-bottom: 1.75rem;
+      border: 1px solid var(--border);
+    }
+    .auth-tab {
+      flex: 1;
+      padding: .55rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .88rem;
+      font-weight: 600;
+      border-radius: .55rem;
+      transition: all .2s;
+    }
+    .auth-tab.active {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59,130,246,.4);
+    }
+
     .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: .35rem; }
-    .form-group input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: .65rem .85rem; border-radius: .5rem; font-size: .95rem; outline: none; transition: border-color .2s; }
-    .form-group input:focus { border-color: var(--blue); }
-    .btn-primary { width: 100%; background: var(--blue); color: #fff; border: none; padding: .75rem; border-radius: .5rem; font-size: .95rem; font-weight: 600; cursor: pointer; margin-top: .5rem; }
-    .btn-primary:hover { opacity: .85; }
-    .auth-msg { margin-top: .75rem; font-size: .85rem; text-align: center; padding: .5rem; border-radius: .4rem; min-height: 2rem; }
-    .auth-msg.error   { background: rgba(239,68,68,.1); color: var(--red); }
-    .auth-msg.success { background: rgba(34,197,94,.1);  color: var(--green); }
+    .form-group label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: .4rem;
+    }
+    .form-group input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .7rem .9rem;
+      border-radius: .6rem;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+    }
+    .form-group input::placeholder { color: var(--muted); opacity: .7; }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #fff;
+      border: none;
+      padding: .8rem;
+      border-radius: .6rem;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: all .2s;
+      box-shadow: 0 4px 15px rgba(59,130,246,.3);
+      letter-spacing: .2px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59,130,246,.45);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .auth-msg {
+      margin-top: .9rem;
+      font-size: .84rem;
+      text-align: center;
+      padding: .6rem .9rem;
+      border-radius: .55rem;
+      min-height: 2.2rem;
+    }
+    .auth-msg.error   { background: rgba(239,68,68,.1);  color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+    .auth-msg.success { background: rgba(34,197,94,.1);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
 
     /* ── LAYOUT ── */
     .hidden { display: none !important; }
     #app-page { display: flex; height: 100vh; overflow: hidden; }
-    .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-    .sidebar-logo { padding: 1.25rem 1rem; font-size: 1rem; font-weight: 700; border-bottom: 1px solid var(--border); }
-    .sidebar-nav { flex: 1; padding: .75rem .5rem; display: flex; flex-direction: column; gap: .25rem; }
-    .nav-item { display: flex; align-items: center; gap: .6rem; padding: .6rem .85rem; border-radius: .5rem; cursor: pointer; font-size: .88rem; background: none; border: none; color: var(--text); width: 100%; text-align: left; transition: background .15s; }
-    .nav-item:hover { background: var(--surface2); }
-    .nav-item.active { background: rgba(59,130,246,.15); color: var(--blue); }
-    .nav-icon { font-size: 1rem; }
-    .badge-count { margin-left: auto; background: var(--blue); color: #fff; font-size: .7rem; padding: .1rem .45rem; border-radius: 999px; min-width: 20px; text-align: center; }
-    .sidebar-footer { padding: .75rem; border-top: 1px solid var(--border); }
-    .user-chip { display: flex; align-items: center; gap: .6rem; }
-    .user-avatar { width: 32px; height: 32px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; flex-shrink: 0; }
-    .user-info-small .name { font-size: .82rem; font-weight: 600; }
-    .role-badge { font-size: .68rem; padding: .1rem .4rem; border-radius: .3rem; font-weight: 700; }
-    .role-badge.role-admin  { background: rgba(168,85,247,.2); color: var(--purple); }
-    .role-badge.role-member { background: rgba(59,130,246,.2);  color: var(--blue); }
-    .btn-logout { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: .2rem; }
-    .btn-logout:hover { color: var(--red); }
 
-    /* ── MAIN ── */
-    .main-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .page-title { font-size: 1.35rem; font-weight: 700; }
-    .btn-sm { padding: .45rem 1rem; border-radius: .5rem; border: none; cursor: pointer; font-size: .85rem; font-weight: 600; }
-    .btn-blue { background: var(--blue); color: #fff; }
-    .btn-blue:hover { opacity: .85; }
-    .btn-red { background: var(--red); color: #fff; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-outline:hover { background: var(--surface2); }
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 250px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      padding: 1.4rem 1.25rem 1rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -.3px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .sidebar-logo span { font-size: 1.3rem; }
+
+    .sidebar-section {
+      padding: .75rem .75rem .25rem;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .sidebar-nav { flex: 1; padding: .5rem .75rem; display: flex; flex-direction: column; gap: .2rem; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .65rem .9rem;
+      border-radius: .6rem;
+      cursor: pointer;
+      font-size: .875rem;
+      font-weight: 500;
+      background: none;
+      border: none;
+      color: var(--muted);
+      width: 100%;
+      text-align: left;
+      transition: all .15s;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active {
+      background: rgba(59,130,246,.12);
+      color: var(--blue);
+      font-weight: 600;
+    }
+    .nav-icon { font-size: 1rem; flex-shrink: 0; }
+    .badge-count {
+      margin-left: auto;
+      background: var(--blue);
+      color: #fff;
+      font-size: .68rem;
+      padding: .1rem .5rem;
+      border-radius: 999px;
+      min-width: 20px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      padding: .85rem .75rem;
+      border-top: 1px solid var(--border);
+    }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: .75rem;
+      padding: .6rem .75rem;
+    }
+    .user-avatar {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .85rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(59,130,246,.3);
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-info .name {
+      font-size: .82rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .role-badge {
+      font-size: .65rem;
+      padding: .1rem .45rem;
+      border-radius: .3rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+    .role-badge.role-admin  { background: rgba(168,85,247,.2); color: #c084fc; }
+    .role-badge.role-member { background: rgba(59,130,246,.2);  color: #60a5fa; }
+    .btn-logout {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1rem; padding: .15rem;
+      border-radius: .35rem; transition: all .15s; flex-shrink: 0;
+    }
+    .btn-logout:hover { color: var(--red); background: rgba(239,68,68,.1); }
+
+    /* ── MAIN CONTENT ── */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 80% 10%, rgba(59,130,246,.05) 0%, transparent 50%);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+    }
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -.4px;
+    }
+    .page-title span { color: var(--muted); font-size: .9rem; font-weight: 400; margin-left: .5rem; }
+
+    /* ── BUTTONS ── */
+    .btn-sm {
+      padding: .5rem 1.1rem;
+      border-radius: .6rem;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .btn-blue {
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(59,130,246,.3);
+    }
+    .btn-blue:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(59,130,246,.4); }
+    .btn-red  { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+    .btn-red:hover { background: rgba(239,68,68,.25); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+    }
+    .btn-outline:hover { background: var(--surface2); color: var(--text); }
 
     /* ── FILTERS ── */
-    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-    .filter-btn { padding: .35rem .85rem; border-radius: 999px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; font-size: .8rem; transition: all .15s; }
-    .filter-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .filter-bar {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .filter-btn {
+      padding: .4rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+    .filter-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59,130,246,.3);
+    }
 
-    /* ── TASK CARDS ── */
-    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-    .task-card { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: 1rem 1.15rem; transition: border-color .2s; }
-    .task-card:hover { border-color: var(--blue); }
-    .task-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; margin-bottom: .5rem; }
-    .task-title { font-weight: 600; font-size: .92rem; flex: 1; }
-    .task-desc { color: var(--muted); font-size: .8rem; margin-bottom: .75rem; }
-    .task-meta { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
-    .tag { font-size: .7rem; padding: .15rem .5rem; border-radius: .3rem; font-weight: 600; }
-    .tag-todo        { background: rgba(148,163,184,.15); color: var(--muted); }
-    .tag-in-progress { background: rgba(245,158,11,.15);  color: var(--yellow); }
-    .tag-done        { background: rgba(34,197,94,.15);   color: var(--green); }
-    .tag-high        { background: rgba(239,68,68,.15);   color: var(--red); }
-    .tag-medium      { background: rgba(245,158,11,.15);  color: var(--yellow); }
-    .tag-low         { background: rgba(34,197,94,.15);   color: var(--green); }
-    .task-owner { font-size: .72rem; color: var(--muted); margin-left: auto; }
-    .card-actions { display: flex; gap: .35rem; }
-    .icon-btn { background: none; border: none; cursor: pointer; font-size: .85rem; padding: .2rem .35rem; border-radius: .3rem; }
-    .icon-btn:hover { background: var(--surface2); }
+    /* ── TASK GRID ── */
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.1rem 1.2rem;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .task-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, transparent);
+      transition: background .2s;
+    }
+    .task-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,.3), 0 0 0 1px rgba(59,130,246,.1);
+    }
+    .task-card:hover::before { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: .5rem;
+      margin-bottom: .5rem;
+    }
+    .task-title { font-weight: 700; font-size: .92rem; flex: 1; line-height: 1.35; }
+    .task-desc  { color: var(--muted); font-size: .8rem; margin-bottom: .8rem; line-height: 1.5; }
+
+    .task-meta  { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+    .tag {
+      font-size: .7rem;
+      padding: .2rem .55rem;
+      border-radius: .4rem;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .tag-todo        { background: rgba(148,163,184,.1); color: #94a3b8; border: 1px solid rgba(148,163,184,.15); }
+    .tag-in-progress { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
+    .tag-done        { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+    .tag-high        { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+    .tag-medium      { background: rgba(245,158,11,.1);  color: #fbbf24; border: 1px solid rgba(245,158,11,.15); }
+    .tag-low         { background: rgba(34,197,94,.1);   color: #4ade80; border: 1px solid rgba(34,197,94,.15); }
+
+    .card-actions { display: flex; gap: .25rem; flex-shrink: 0; }
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: .82rem;
+      padding: .3rem .4rem;
+      border-radius: .4rem;
+      color: var(--muted);
+      transition: all .15s;
+    }
+    .icon-btn:hover { background: var(--surface2); color: var(--text); }
 
     /* ── MODAL ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.75rem; width: 440px; max-width: 95vw; }
-    .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1.25rem; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.25rem; }
-    select, textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: .6rem .75rem; border-radius: .5rem; width: 100%; font-size: .9rem; outline: none; font-family: inherit; }
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      width: 460px;
+      max-width: 95vw;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 1.4rem;
+      letter-spacing: -.3px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: .6rem;
+      margin-top: 1.4rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    select, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .65rem .8rem;
+      border-radius: .6rem;
+      width: 100%;
+      font-size: .9rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
     textarea { resize: vertical; min-height: 80px; }
 
     /* ── TOAST ── */
-    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: .75rem 1.25rem; font-size: .88rem; z-index: 999; transition: opacity .3s; opacity: 0; pointer-events: none; }
-    #toast.show { opacity: 1; }
-    .empty-state { text-align: center; color: var(--muted); padding: 3rem; }
+    #toast {
+      position: fixed;
+      bottom: 1.75rem;
+      right: 1.75rem;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: .85rem;
+      padding: .8rem 1.3rem;
+      font-size: .875rem;
+      z-index: 999;
+      transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,.4);
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 4rem 2rem;
+      grid-column: 1 / -1;
+    }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: .75rem; opacity: .5; }
+    .empty-state p { font-size: .9rem; }
   </style>
 </head>
 <body>
@@ -109,55 +502,62 @@
 
 <!-- AUTH PAGE -->
 <div id="auth-page">
-  <div class="auth-box">
-    <div class="auth-logo">🔐</div>
-    <div class="auth-title">Task Board</div>
-    <div class="auth-subtitle">Final Lab Sec2 — ENGSE207</div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login"    onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
-      <button class="auth-tab"        id="tab-register" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="logo">📋</div>
+      <h1>Task Board</h1>
+      <p>ENGSE207 · Final Lab Sec2</p>
     </div>
 
-    <!-- Login form -->
-    <div id="form-login">
-      <div class="form-group">
-        <label>Email</label>
-        <input id="login-email" type="email" placeholder="you@lab.local">
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login"    onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button class="auth-tab"        id="tab-register" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
       </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input id="login-password" type="password" placeholder="password">
-      </div>
-      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
-    </div>
 
-    <!-- Register form -->
-    <div id="form-register" class="hidden">
-      <div class="form-group">
-        <label>Username</label>
-        <input id="reg-username" type="text" placeholder="ชื่อผู้ใช้">
+      <!-- Login form -->
+      <div id="form-login">
+        <div class="form-group">
+          <label>Email</label>
+          <input id="login-email" type="email" placeholder="you@lab.local">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input id="login-password" type="password" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ →</button>
       </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input id="reg-email" type="email" placeholder="you@example.com">
-      </div>
-      <div class="form-group">
-        <label>Password (อย่างน้อย 6 ตัวอักษร)</label>
-        <input id="reg-password" type="password" placeholder="password">
-      </div>
-      <button class="btn-primary" onclick="doRegister()">สมัครสมาชิก</button>
-    </div>
 
-    <div id="auth-msg" class="auth-msg"></div>
+      <!-- Register form -->
+      <div id="form-register" class="hidden">
+        <div class="form-group">
+          <label>Username</label>
+          <input id="reg-username" type="text" placeholder="ชื่อผู้ใช้">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input id="reg-email" type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password <span style="font-weight:400;text-transform:none;letter-spacing:0">(อย่างน้อย 6 ตัวอักษร)</span></label>
+          <input id="reg-password" type="password" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="doRegister()">สมัครสมาชิก →</button>
+      </div>
+
+      <div id="auth-msg" class="auth-msg"></div>
+    </div>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="app-page" class="hidden">
   <nav class="sidebar">
-    <div class="sidebar-logo">📋 Task Board</div>
+    <div class="sidebar-logo">
+      <span>📋</span> Task Board
+    </div>
     <div class="sidebar-nav">
+      <div class="sidebar-section">Menu</div>
       <button class="nav-item active" data-page="tasks" onclick="showPage('tasks')">
         <span class="nav-icon">✅</span> Tasks
         <span class="badge-count" id="task-count">0</span>
@@ -170,7 +570,7 @@
     <div class="sidebar-footer">
       <div class="user-chip">
         <div class="user-avatar" id="sidebar-avatar">?</div>
-        <div class="user-info-small">
+        <div class="user-info">
           <div class="name" id="sidebar-name">—</div>
           <span class="role-badge" id="sidebar-role-badge">—</span>
         </div>
@@ -182,8 +582,8 @@
   <div class="main-content">
     <div id="page-tasks">
       <div class="page-header">
-        <div class="page-title">✅ Tasks</div>
-        <button class="btn-sm btn-blue" onclick="openCreateModal()">+ สร้าง Task ใหม่</button>
+        <div class="page-title">Tasks <span id="task-subtitle"></span></div>
+        <button class="btn-sm btn-blue" onclick="openCreateModal()">＋ สร้าง Task ใหม่</button>
       </div>
       <div class="filter-bar">
         <button class="filter-btn active" onclick="setFilter('ALL', this)">ทั้งหมด</button>
@@ -192,7 +592,10 @@
         <button class="filter-btn" onclick="setFilter('DONE', this)">DONE</button>
       </div>
       <div class="task-grid" id="task-grid">
-        <div class="empty-state">⏳ กำลังโหลด...</div>
+        <div class="empty-state">
+          <div class="empty-icon">⏳</div>
+          <p>กำลังโหลด...</p>
+        </div>
       </div>
     </div>
   </div>
@@ -202,37 +605,45 @@
 <div id="task-modal" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-title" id="modal-title">สร้าง Task ใหม่</div>
-    <div class="form-group"><label>Title *</label><input id="task-title" type="text" placeholder="ชื่อ task"></div>
-    <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="รายละเอียด (ถ้ามี)"></textarea></div>
-    <div class="form-group"><label>Status</label>
+    <div class="form-group">
+      <label>Title *</label>
+      <input id="task-title" type="text" placeholder="ชื่อ task" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:.65rem .8rem;border-radius:.6rem;width:100%;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;" onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.12)'" onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="task-desc" placeholder="รายละเอียด (ถ้ามี)"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
       <select id="task-status">
-        <option value="TODO">TODO</option>
-        <option value="IN_PROGRESS">IN PROGRESS</option>
-        <option value="DONE">DONE</option>
+        <option value="TODO">📌 TODO</option>
+        <option value="IN_PROGRESS">🔄 IN PROGRESS</option>
+        <option value="DONE">✅ DONE</option>
       </select>
     </div>
-    <div class="form-group"><label>Priority</label>
+    <div class="form-group">
+      <label>Priority</label>
       <select id="task-priority">
-        <option value="low">Low</option>
-        <option value="medium" selected>Medium</option>
-        <option value="high">High</option>
+        <option value="low">🟢 Low</option>
+        <option value="medium" selected>🟡 Medium</option>
+        <option value="high">🔴 High</option>
       </select>
     </div>
     <div class="modal-footer">
       <button class="btn-sm btn-outline" onclick="closeModal()">ยกเลิก</button>
-      <button class="btn-sm btn-blue" id="modal-submit-btn" onclick="submitTask()">สร้าง</button>
+      <button class="btn-sm btn-blue"    id="modal-submit-btn" onclick="submitTask()">สร้าง</button>
     </div>
   </div>
 </div>
 
 <!-- DELETE MODAL -->
 <div id="delete-modal" class="modal-overlay hidden">
-  <div class="modal">
+  <div class="modal" style="max-width:360px">
     <div class="modal-title">⚠️ ยืนยันการลบ</div>
-    <p style="color:var(--muted);font-size:.9rem;">คุณต้องการลบ task นี้จริงหรือไม่?</p>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.6;">คุณต้องการลบ task นี้จริงหรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้</p>
     <div class="modal-footer">
       <button class="btn-sm btn-outline" onclick="document.getElementById('delete-modal').classList.add('hidden')">ยกเลิก</button>
-      <button class="btn-sm btn-red" id="delete-confirm-btn">ลบ</button>
+      <button class="btn-sm btn-red" id="delete-confirm-btn">ลบ Task</button>
     </div>
   </div>
 </div>
@@ -256,6 +667,7 @@ function switchAuthTab(tab) {
   document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
   document.getElementById('tab-register').classList.toggle('active', tab === 'register');
   document.getElementById('auth-msg').textContent = '';
+  document.getElementById('auth-msg').className   = 'auth-msg';
 }
 
 /* ── LOGIN ── */
@@ -318,7 +730,7 @@ async function doRegister() {
 
 function showAuthMsg(msg, type) {
   const el = document.getElementById('auth-msg');
-  el.className = `auth-msg ${type}`;
+  el.className   = `auth-msg ${type}`;
   el.textContent = msg;
 }
 
@@ -328,6 +740,7 @@ function doLogout() {
   document.getElementById('app-page').classList.add('hidden');
   document.getElementById('auth-page').style.display = 'flex';
   document.getElementById('auth-msg').textContent = '';
+  document.getElementById('auth-msg').className   = 'auth-msg';
 }
 
 /* ── INIT ── */
@@ -364,7 +777,8 @@ async function loadTasks() {
     document.getElementById('task-count').textContent = allTasks.length;
     renderTasks();
   } catch (e) {
-    document.getElementById('task-grid').innerHTML = '<div class="empty-state">❌ โหลด tasks ไม่ได้</div>';
+    document.getElementById('task-grid').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">❌</div><p>โหลด tasks ไม่ได้</p></div>';
   }
 }
 
@@ -378,7 +792,12 @@ function setFilter(f, btn) {
 function renderTasks() {
   const grid  = document.getElementById('task-grid');
   const tasks = currentFilter === 'ALL' ? allTasks : allTasks.filter(t => t.status === currentFilter);
-  if (!tasks.length) { grid.innerHTML = '<div class="empty-state">📭 ไม่มี task ในหมวดนี้</div>'; return; }
+  const sub   = document.getElementById('task-subtitle');
+  if (sub) sub.textContent = `(${tasks.length})`;
+  if (!tasks.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>ไม่มี task ในหมวดนี้</p></div>';
+    return;
+  }
   grid.innerHTML = tasks.map(t => {
     const sTag = t.status === 'TODO' ? 'tag-todo' : t.status === 'IN_PROGRESS' ? 'tag-in-progress' : 'tag-done';
     const pTag = t.priority === 'high' ? 'tag-high' : t.priority === 'low' ? 'tag-low' : 'tag-medium';
@@ -388,13 +807,13 @@ function renderTasks() {
         <div class="task-card-header">
           <div class="task-title">${escHtml(t.title)}</div>
           ${canEdit ? `<div class="card-actions">
-            <button class="icon-btn" onclick="openEditModal(${t.id})">✏️</button>
-            <button class="icon-btn" onclick="confirmDelete(${t.id})">🗑️</button>
+            <button class="icon-btn" onclick="openEditModal(${t.id})" title="แก้ไข">✏️</button>
+            <button class="icon-btn" onclick="confirmDelete(${t.id})" title="ลบ">🗑️</button>
           </div>` : ''}
         </div>
         ${t.description ? `<div class="task-desc">${escHtml(t.description)}</div>` : ''}
         <div class="task-meta">
-          <span class="tag ${sTag}">${t.status}</span>
+          <span class="tag ${sTag}">${t.status.replace('_',' ')}</span>
           <span class="tag ${pTag}">${t.priority}</span>
         </div>
       </div>`;
@@ -404,21 +823,22 @@ function renderTasks() {
 /* ── MODALS ── */
 function openCreateModal() {
   editingTaskId = null;
-  document.getElementById('modal-title').textContent = 'สร้าง Task ใหม่';
-  document.getElementById('modal-submit-btn').textContent = 'สร้าง';
+  document.getElementById('modal-title').textContent       = '✨ สร้าง Task ใหม่';
+  document.getElementById('modal-submit-btn').textContent  = 'สร้าง Task';
   document.getElementById('task-title').value    = '';
   document.getElementById('task-desc').value     = '';
   document.getElementById('task-status').value   = 'TODO';
   document.getElementById('task-priority').value = 'medium';
   document.getElementById('task-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('task-title').focus(), 50);
 }
 
 function openEditModal(id) {
   const t = allTasks.find(t => t.id === id);
   if (!t) return;
   editingTaskId = id;
-  document.getElementById('modal-title').textContent = 'แก้ไข Task';
-  document.getElementById('modal-submit-btn').textContent = 'บันทึก';
+  document.getElementById('modal-title').textContent       = '✏️ แก้ไข Task';
+  document.getElementById('modal-submit-btn').textContent  = 'บันทึก';
   document.getElementById('task-title').value    = t.title;
   document.getElementById('task-desc').value     = t.description || '';
   document.getElementById('task-status').value   = t.status;
@@ -438,11 +858,18 @@ async function submitTask() {
   const method = editingTaskId ? 'PUT' : 'POST';
   try {
     const res = await fetch(url, {
-      method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ title, description, status, priority })
     });
-    if (res.ok) { closeModal(); showToast(editingTaskId ? '✅ แก้ไขสำเร็จ' : '✅ สร้างสำเร็จ'); loadTasks(); }
-    else { const d = await res.json(); showToast('❌ ' + (d.error || 'เกิดข้อผิดพลาด')); }
+    if (res.ok) {
+      closeModal();
+      showToast(editingTaskId ? '✅ แก้ไขสำเร็จ' : '✅ สร้าง Task สำเร็จ');
+      loadTasks();
+    } else {
+      const d = await res.json();
+      showToast('❌ ' + (d.error || 'เกิดข้อผิดพลาด'));
+    }
   } catch (e) { showToast('❌ ไม่สามารถเชื่อมต่อได้'); }
 }
 
@@ -454,7 +881,9 @@ function confirmDelete(id) {
 async function deleteTask(id) {
   document.getElementById('delete-modal').classList.add('hidden');
   try {
-    const res = await fetch(`${TASK}/api/tasks/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await fetch(`${TASK}/api/tasks/${id}`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+    });
     if (res.ok) { showToast('🗑️ ลบสำเร็จ'); loadTasks(); }
     else { const d = await res.json(); showToast('❌ ' + (d.error || 'ลบไม่สำเร็จ')); }
   } catch (e) { showToast('❌ ไม่สามารถเชื่อมต่อได้'); }
@@ -464,15 +893,16 @@ async function deleteTask(id) {
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  t.textContent = msg;
+  t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-document.getElementById('task-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+document.getElementById('task-modal').addEventListener('click',   e => { if (e.target===e.currentTarget) closeModal(); });
 document.getElementById('delete-modal').addEventListener('click', e => { if (e.target===e.currentTarget) document.getElementById('delete-modal').classList.add('hidden'); });
 document.getElementById('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 

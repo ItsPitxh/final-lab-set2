@@ -7,60 +7,373 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f172a; --surface: #1e293b; --border: #334155;
-      --text: #e2e8f0; --muted: #94a3b8;
-      --blue: #3b82f6; --green: #22c55e; --yellow: #f59e0b;
-      --red: #ef4444; --purple: #a855f7; --teal: #14b8a6;
+      --bg:      #0a0f1e;
+      --surface: #111827;
+      --surface2:#1a2235;
+      --border:  #1e3a5f;
+      --border2: #2a4a7f;
+      --text:    #e2e8f0;
+      --muted:   #6b7fa3;
+      --blue:    #3b82f6;
+      --blue2:   #2563eb;
+      --green:   #22c55e;
+      --yellow:  #f59e0b;
+      --red:     #ef4444;
+      --purple:  #a855f7;
+      --teal:    #14b8a6;
     }
-    body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-    .header { background:var(--surface); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; }
-    .header h1 { font-size:1.1rem; font-weight:700; }
-    .container { max-width:900px; margin:0 auto; padding:1.5rem; }
 
-    .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:.75rem; margin-bottom:1.5rem; }
-    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:.75rem; padding:.85rem 1rem; text-align:center; }
-    .stat-label { color:var(--muted); font-size:.72rem; text-transform:uppercase; }
-    .stat-value { font-size:1.5rem; font-weight:700; margin-top:.2rem; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-    .filter-bar { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
-    .filter-bar select { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:.45rem .75rem; border-radius:.5rem; font-size:.85rem; outline:none; }
-    .btn { padding:.45rem 1rem; border-radius:.5rem; border:none; cursor:pointer; font-size:.85rem; font-weight:600; }
-    .btn-primary   { background:var(--blue); color:#fff; }
-    .btn-secondary { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-    .tabs { display:flex; gap:.5rem; margin-bottom:1.25rem; }
-    .tab { padding:.45rem 1.1rem; border-radius:.5rem; border:1px solid var(--border); cursor:pointer; font-size:.85rem; background:var(--surface); color:var(--muted); }
-    .tab.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: .9rem 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .header-left { display: flex; align-items: center; gap: .75rem; }
+    .header-left h1 { font-size: 1rem; font-weight: 800; letter-spacing: -.3px; }
+    .header-right { display: flex; gap: 1rem; align-items: center; }
+    .user-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .35rem .85rem .35rem .4rem;
+      font-size: .8rem;
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      color: var(--muted);
+    }
+    .user-pill .dot {
+      width: 24px; height: 24px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 800; color: #fff;
+    }
+    .back-link {
+      color: var(--blue);
+      font-size: .82rem;
+      text-decoration: none;
+      display: flex; align-items: center; gap: .3rem;
+      padding: .35rem .75rem;
+      border-radius: .5rem;
+      border: 1px solid var(--border);
+      transition: all .15s;
+    }
+    .back-link:hover { background: var(--surface2); }
 
-    .timeline { position:relative; padding-left:2rem; }
-    .timeline::before { content:''; position:absolute; left:.6rem; top:0; bottom:0; width:2px; background:var(--border); }
-    .activity-item { position:relative; margin-bottom:1.25rem; padding:.85rem 1rem; background:var(--surface); border:1px solid var(--border); border-radius:.75rem; }
-    .activity-item::before { content:''; position:absolute; left:-1.6rem; top:1rem; width:10px; height:10px; border-radius:50%; background:var(--blue); border:2px solid var(--bg); }
-    .activity-item.USER_REGISTERED::before  { background:var(--green); }
-    .activity-item.USER_LOGIN::before       { background:var(--blue); }
-    .activity-item.TASK_CREATED::before     { background:var(--teal); }
-    .activity-item.TASK_STATUS_CHANGED::before { background:var(--yellow); }
-    .activity-item.TASK_DELETED::before     { background:var(--red); }
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
 
-    .activity-header { display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem; }
-    .event-badge { font-size:.7rem; font-weight:700; padding:.15rem .5rem; border-radius:.3rem; white-space:nowrap; }
-    .badge-REGISTERED { background:rgba(34,197,94,.15);  color:#4ade80; }
-    .badge-LOGIN      { background:rgba(59,130,246,.15); color:#93c5fd; }
-    .badge-CREATED    { background:rgba(20,184,166,.15); color:#5eead4; }
-    .badge-STATUS     { background:rgba(245,158,11,.15); color:#fbbf24; }
-    .badge-DELETED    { background:rgba(239,68,68,.15);  color:#f87171; }
-    .activity-summary { font-size:.88rem; color:var(--text); }
-    .activity-time { font-size:.75rem; color:var(--muted); font-family:'Courier New',monospace; margin-top:.3rem; }
-    .meta-tag { font-size:.72rem; color:var(--muted); background:rgba(255,255,255,.05); padding:.1rem .45rem; border-radius:.3rem; display:inline-block; margin-top:.3rem; }
+    /* ── STATS ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: .85rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1rem;
+      text-align: center;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.02), transparent);
+      pointer-events: none;
+    }
+    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .stat-label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--muted);
+      margin-bottom: .4rem;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -.5px;
+    }
+    .stat-sub { font-size: .7rem; color: var(--muted); margin-top: .15rem; }
 
-    .empty { text-align:center; padding:3rem; color:var(--muted); }
+    /* ── CONTROLS ── */
+    .controls {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
 
-    #login-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:100; }
-    .login-box { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:2rem; width:340px; }
-    .login-box h2 { margin-bottom:1.25rem; font-size:1.1rem; }
-    .form-group { margin-bottom:1rem; }
-    .form-group label { display:block; font-size:.82rem; color:var(--muted); margin-bottom:.35rem; }
-    .form-group input { width:100%; background:#0f172a; border:1px solid var(--border); color:var(--text); padding:.6rem .75rem; border-radius:.5rem; font-size:.9rem; outline:none; }
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .75rem;
+      padding: .2rem;
+      gap: .2rem;
+    }
+    .tab {
+      padding: .45rem 1rem;
+      border-radius: .55rem;
+      border: none;
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 600;
+      background: none;
+      color: var(--muted);
+      transition: all .15s;
+    }
+    .tab.active { background: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(59,130,246,.35); }
+
+    .filter-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .5rem .9rem;
+      border-radius: .6rem;
+      font-size: .83rem;
+      outline: none;
+      transition: border-color .2s;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--blue); }
+
+    .btn-refresh {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      padding: .5rem 1rem;
+      border-radius: .6rem;
+      font-size: .83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .btn-refresh:hover { background: var(--surface); }
+
+    .refresh-time {
+      margin-left: auto;
+      font-size: .75rem;
+      color: var(--muted);
+    }
+
+    /* ── TIMELINE ── */
+    .timeline-wrap {
+      position: relative;
+    }
+    .timeline-wrap::before {
+      content: '';
+      position: absolute;
+      left: 1.1rem;
+      top: 1.5rem;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--border2), var(--border), transparent);
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 1.1rem;
+      margin-bottom: 1rem;
+      padding-left: .25rem;
+    }
+
+    .activity-dot {
+      width: 1.85rem;
+      height: 1.85rem;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      flex-shrink: 0;
+      margin-top: .15rem;
+      z-index: 1;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    .dot-REGISTERED  { background: var(--green);  }
+    .dot-LOGIN       { background: var(--blue);   }
+    .dot-CREATED     { background: var(--teal);   }
+    .dot-STATUS      { background: var(--yellow); }
+    .dot-DELETED     { background: var(--red);    }
+
+    .activity-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .85rem;
+      padding: .85rem 1.1rem;
+      transition: all .15s;
+    }
+    .activity-card:hover {
+      border-color: var(--border2);
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    }
+
+    .activity-card-header {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .4rem;
+      flex-wrap: wrap;
+    }
+
+    .event-badge {
+      font-size: .68rem;
+      font-weight: 800;
+      padding: .2rem .6rem;
+      border-radius: .4rem;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+    .badge-REGISTERED { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+    .badge-LOGIN      { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.2); }
+    .badge-CREATED    { background: rgba(20,184,166,.12); color: #2dd4bf; border: 1px solid rgba(20,184,166,.2); }
+    .badge-STATUS     { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
+    .badge-DELETED    { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+
+    .user-tag {
+      font-size: .76rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: .25rem;
+    }
+    .user-tag strong { color: var(--text); font-weight: 600; }
+
+    .activity-summary {
+      font-size: .875rem;
+      color: var(--text);
+      line-height: 1.5;
+      margin-bottom: .4rem;
+    }
+
+    .activity-footer {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+    .activity-time {
+      font-size: .72rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+    .meta-chips { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .meta-chip {
+      font-size: .68rem;
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      padding: .1rem .5rem;
+      border-radius: .35rem;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+    .empty .icon { font-size: 2.5rem; margin-bottom: .75rem; opacity: .4; }
+    .empty p { font-size: .9rem; }
+
+    /* ── LOGIN OVERLAY ── */
+    #login-overlay {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 60% 30%, rgba(59,130,246,.08), transparent 60%),
+                  var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 2.25rem;
+      width: 360px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+    .login-box .brand { text-align: center; margin-bottom: 1.6rem; }
+    .login-box .brand .logo { font-size: 2.2rem; }
+    .login-box .brand h2 { font-size: 1.2rem; font-weight: 800; margin-top: .35rem; }
+    .login-box .brand p  { color: var(--muted); font-size: .82rem; margin-top: .2rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block;
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: .4rem;
+    }
+    .form-group input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .7rem .9rem;
+      border-radius: .6rem;
+      font-size: .92rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: #fff;
+      border: none;
+      padding: .8rem;
+      border-radius: .65rem;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: .5rem;
+      box-shadow: 0 4px 15px rgba(59,130,246,.35);
+      transition: all .2s;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,.5); }
+    #l-err { color: #f87171; font-size: .82rem; margin-top: .6rem; min-height: 1.2rem; text-align: center; }
   </style>
 </head>
 <body>
@@ -69,50 +382,87 @@
 <!-- Login overlay -->
 <div id="login-overlay">
   <div class="login-box">
-    <h2>📅 Activity Timeline</h2>
-    <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">กรุณา login เพื่อดู activities</p>
-    <div class="form-group"><label>Email</label><input id="l-email" type="email" placeholder="email@example.com"></div>
-    <div class="form-group"><label>Password</label><input id="l-pass" type="password" placeholder="password"></div>
-    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <p id="l-err" style="color:var(--red);font-size:.82rem;margin-top:.5rem"></p>
+    <div class="brand">
+      <div class="logo">📅</div>
+      <h2>Activity Timeline</h2>
+      <p>กรุณา login เพื่อดู activities</p>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input id="l-email" type="email" placeholder="email@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input id="l-pass" type="password" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="doLogin()">เข้าสู่ระบบ →</button>
+    <p id="l-err"></p>
   </div>
 </div>
 
+<!-- Header -->
 <div class="header">
-  <h1>📅 Activity Timeline</h1>
-  <div style="display:flex;gap:1rem;align-items:center">
-    <span id="logged-as" style="font-size:.82rem;color:var(--muted)"></span>
-    <a href="index.html" style="color:var(--blue);font-size:.85rem;text-decoration:none">← Task Board</a>
+  <div class="header-left">
+    <h1>📅 Activity Timeline</h1>
+  </div>
+  <div class="header-right">
+    <div class="user-pill" id="user-pill" style="display:none">
+      <div class="dot" id="user-dot">?</div>
+      <span id="logged-as">—</span>
+    </div>
+    <a href="index.html" class="back-link">← Task Board</a>
   </div>
 </div>
 
+<!-- Main -->
 <div class="container">
+
+  <!-- Stats -->
   <div class="stats">
-    <div class="stat-card"><div class="stat-label">ทั้งหมด</div><div class="stat-value" id="stat-total">—</div></div>
-    <div class="stat-card"><div class="stat-label" style="color:var(--green)">Registered</div><div class="stat-value" style="color:var(--green)" id="stat-reg">—</div></div>
-    <div class="stat-card"><div class="stat-label" style="color:var(--blue)">Logins</div><div class="stat-value" style="color:var(--blue)" id="stat-login">—</div></div>
-    <div class="stat-card"><div class="stat-label" style="color:var(--teal)">Tasks Created</div><div class="stat-value" style="color:var(--teal)" id="stat-tasks">—</div></div>
-    <div class="stat-card"><div class="stat-label" style="color:var(--yellow)">Status Changes</div><div class="stat-value" style="color:var(--yellow)" id="stat-status">—</div></div>
+    <div class="stat-card">
+      <div class="stat-label">ทั้งหมด</div>
+      <div class="stat-value" id="stat-total" style="color:var(--text)">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="color:var(--green)">Registered</div>
+      <div class="stat-value" style="color:var(--green)" id="stat-reg">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="color:var(--blue)">Logins</div>
+      <div class="stat-value" style="color:var(--blue)" id="stat-login">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="color:var(--teal)">Tasks Created</div>
+      <div class="stat-value" style="color:var(--teal)" id="stat-tasks">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="color:var(--yellow)">Status Changes</div>
+      <div class="stat-value" style="color:var(--yellow)" id="stat-status">—</div>
+    </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" id="tab-mine" onclick="switchTab('mine')">🙋 กิจกรรมของฉัน</button>
-    <button class="tab" id="tab-all" onclick="switchTab('all')" style="display:none">👑 ทั้งระบบ (admin)</button>
-  </div>
+  <!-- Controls -->
+  <div class="controls">
+    <div class="tabs">
+      <button class="tab active" id="tab-mine" onclick="switchTab('mine')">🙋 กิจกรรมของฉัน</button>
+      <button class="tab" id="tab-all" onclick="switchTab('all')" style="display:none">👑 ทั้งระบบ</button>
+    </div>
 
-  <div class="filter-bar">
-    <select id="f-event" onchange="loadActivities()">
-      <option value="">event ทั้งหมด</option>
+    <select class="filter-select" id="f-event" onchange="loadActivities()">
+      <option value="">Event: ทั้งหมด</option>
       <option value="USER_REGISTERED">USER_REGISTERED</option>
       <option value="USER_LOGIN">USER_LOGIN</option>
       <option value="TASK_CREATED">TASK_CREATED</option>
       <option value="TASK_STATUS_CHANGED">TASK_STATUS_CHANGED</option>
       <option value="TASK_DELETED">TASK_DELETED</option>
     </select>
-    <button class="btn btn-secondary" onclick="loadActivities()">🔄 Refresh</button>
+
+    <button class="btn-refresh" onclick="loadActivities()">🔄 Refresh</button>
+    <span class="refresh-time" id="refresh-time"></span>
   </div>
 
-  <div id="timeline-wrap" class="timeline"></div>
+  <!-- Timeline -->
+  <div id="timeline-wrap"></div>
 </div>
 
 <script>
@@ -123,14 +473,17 @@ let token       = localStorage.getItem('jwt_token');
 let currentUser = null;
 let currentTab  = 'mine';
 
-function badgeClass(et) {
-  if (et === 'USER_REGISTERED')    return 'badge-REGISTERED';
-  if (et === 'USER_LOGIN')         return 'badge-LOGIN';
-  if (et === 'TASK_CREATED')       return 'badge-CREATED';
-  if (et === 'TASK_STATUS_CHANGED')return 'badge-STATUS';
-  if (et === 'TASK_DELETED')       return 'badge-DELETED';
-  return '';
-}
+const BADGE_MAP = {
+  USER_REGISTERED:     'REGISTERED',
+  USER_LOGIN:          'LOGIN',
+  TASK_CREATED:        'CREATED',
+  TASK_STATUS_CHANGED: 'STATUS',
+  TASK_DELETED:        'DELETED'
+};
+const ICON_MAP = {
+  USER_REGISTERED: '🎉', USER_LOGIN: '🔑',
+  TASK_CREATED: '✅', TASK_STATUS_CHANGED: '🔄', TASK_DELETED: '🗑️'
+};
 
 async function doLogin() {
   const email    = document.getElementById('l-email').value.trim();
@@ -156,8 +509,15 @@ async function doLogin() {
 function initPage(user) {
   currentUser = user;
   document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('logged-as').textContent = `${user.username} (${user.role})`;
-  if (user.role === 'admin') document.getElementById('tab-all').style.display = '';
+
+  const initial = (user.username || '?').charAt(0).toUpperCase();
+  document.getElementById('user-dot').textContent  = initial;
+  document.getElementById('logged-as').textContent = `${user.username} · ${user.role}`;
+  document.getElementById('user-pill').style.display = 'flex';
+
+  if (user.role === 'admin') {
+    document.getElementById('tab-all').style.display = '';
+  }
   loadActivities();
 }
 
@@ -174,47 +534,70 @@ async function loadActivities() {
   const params    = new URLSearchParams({ limit: 100 });
   if (eventType) params.set('event_type', eventType);
 
+  document.getElementById('timeline-wrap').innerHTML =
+    '<div class="empty"><div class="icon">⏳</div><p>กำลังโหลด...</p></div>';
+
   try {
     const res  = await fetch(`${ACTIVITY}${endpoint}?${params}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
+    if (res.status === 401) { document.getElementById('login-overlay').style.display = 'flex'; return; }
     const data = await res.json();
     if (!res.ok) { renderEmpty(data.error || 'เกิดข้อผิดพลาด'); return; }
-    renderStats(data.activities || []);
-    renderTimeline(data.activities || []);
+    const acts = data.activities || [];
+    renderStats(acts);
+    renderTimeline(acts);
+    document.getElementById('refresh-time').textContent =
+      `อัปเดต ${new Date().toLocaleTimeString('th-TH')} · ${acts.length}/${data.total} รายการ`;
   } catch (e) {
     renderEmpty('ไม่สามารถเชื่อมต่อ activity-service ได้');
   }
 }
 
-function renderStats(activities) {
-  document.getElementById('stat-total').textContent  = activities.length;
-  document.getElementById('stat-reg').textContent    = activities.filter(a => a.event_type === 'USER_REGISTERED').length;
-  document.getElementById('stat-login').textContent  = activities.filter(a => a.event_type === 'USER_LOGIN').length;
-  document.getElementById('stat-tasks').textContent  = activities.filter(a => a.event_type === 'TASK_CREATED').length;
-  document.getElementById('stat-status').textContent = activities.filter(a => a.event_type === 'TASK_STATUS_CHANGED').length;
+function renderStats(acts) {
+  document.getElementById('stat-total').textContent  = acts.length;
+  document.getElementById('stat-reg').textContent    = acts.filter(a => a.event_type === 'USER_REGISTERED').length;
+  document.getElementById('stat-login').textContent  = acts.filter(a => a.event_type === 'USER_LOGIN').length;
+  document.getElementById('stat-tasks').textContent  = acts.filter(a => a.event_type === 'TASK_CREATED').length;
+  document.getElementById('stat-status').textContent = acts.filter(a => a.event_type === 'TASK_STATUS_CHANGED').length;
 }
 
 function renderTimeline(activities) {
   const wrap = document.getElementById('timeline-wrap');
-  if (!activities.length) { wrap.innerHTML = '<div class="empty">ยังไม่มี activity</div>'; return; }
-  wrap.innerHTML = activities.map(a => {
-    const meta = a.meta ? Object.entries(a.meta).map(([k,v]) => `<span class="meta-tag">${k}: ${v}</span>`).join(' ') : '';
+  if (!activities.length) {
+    wrap.innerHTML = '<div class="empty"><div class="icon">📭</div><p>ยังไม่มี activity</p></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="timeline-wrap" id="tl-inner"></div>';
+  const inner = document.getElementById('tl-inner');
+  inner.innerHTML = activities.map(a => {
+    const badge  = BADGE_MAP[a.event_type] || 'LOGIN';
+    const icon   = ICON_MAP[a.event_type]  || '•';
+    const time   = new Date(a.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'medium' });
+    const metas  = a.meta
+      ? Object.entries(a.meta).map(([k,v]) => `<span class="meta-chip">${escHtml(k)}: ${escHtml(String(v))}</span>`).join('')
+      : '';
     return `
-      <div class="activity-item ${a.event_type}">
-        <div class="activity-header">
-          <span class="event-badge ${badgeClass(a.event_type)}">${a.event_type}</span>
-          ${a.username ? `<span style="font-size:.78rem;color:var(--muted)">👤 ${escHtml(a.username)}</span>` : ''}
+      <div class="activity-item">
+        <div class="activity-dot dot-${badge}">${icon}</div>
+        <div class="activity-card">
+          <div class="activity-card-header">
+            <span class="event-badge badge-${badge}">${escHtml(a.event_type)}</span>
+            ${a.username ? `<span class="user-tag">👤 <strong>${escHtml(a.username)}</strong></span>` : ''}
+          </div>
+          <div class="activity-summary">${escHtml(a.summary || '—')}</div>
+          <div class="activity-footer">
+            <span class="activity-time">🕐 ${escHtml(time)}</span>
+            ${metas ? `<div class="meta-chips">${metas}</div>` : ''}
+          </div>
         </div>
-        <div class="activity-summary">${escHtml(a.summary || '—')}</div>
-        ${meta ? `<div style="margin-top:.35rem">${meta}</div>` : ''}
-        <div class="activity-time">${new Date(a.created_at).toLocaleString('th-TH')}</div>
       </div>`;
   }).join('');
 }
 
 function renderEmpty(msg) {
-  document.getElementById('timeline-wrap').innerHTML = `<div class="empty">${escHtml(msg)}</div>`;
+  document.getElementById('timeline-wrap').innerHTML =
+    `<div class="empty"><div class="icon">⚠️</div><p>${escHtml(msg)}</p></div>`;
 }
 
 function escHtml(s) {
