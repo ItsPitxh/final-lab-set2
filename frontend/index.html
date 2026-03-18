@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔐 Task Board — Final Lab</title>
+  <title>🔐 Task Board — Final Lab Sec2</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -14,12 +14,15 @@
     }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── AUTH ── */
+    /* ── AUTH TABS ── */
     #auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 2.5rem; width: 380px; }
+    .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 2.5rem; width: 400px; }
     .auth-logo { font-size: 2.5rem; text-align: center; margin-bottom: .5rem; }
     .auth-title { font-size: 1.5rem; font-weight: 700; text-align: center; }
-    .auth-subtitle { color: var(--muted); font-size: .85rem; text-align: center; margin-bottom: 1.5rem; }
+    .auth-subtitle { color: var(--muted); font-size: .85rem; text-align: center; margin-bottom: 1.25rem; }
+    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .auth-tab { padding: .5rem 1rem; background: none; border: none; color: var(--muted); cursor: pointer; font-size: .9rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .auth-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: .35rem; }
     .form-group input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: .65rem .85rem; border-radius: .5rem; font-size: .95rem; outline: none; transition: border-color .2s; }
@@ -27,8 +30,8 @@
     .btn-primary { width: 100%; background: var(--blue); color: #fff; border: none; padding: .75rem; border-radius: .5rem; font-size: .95rem; font-weight: 600; cursor: pointer; margin-top: .5rem; }
     .btn-primary:hover { opacity: .85; }
     .auth-msg { margin-top: .75rem; font-size: .85rem; text-align: center; padding: .5rem; border-radius: .4rem; min-height: 2rem; }
-    .auth-msg.error { background: rgba(239,68,68,.1); color: var(--red); }
-    .auth-msg.success { background: rgba(34,197,94,.1); color: var(--green); }
+    .auth-msg.error   { background: rgba(239,68,68,.1); color: var(--red); }
+    .auth-msg.success { background: rgba(34,197,94,.1);  color: var(--green); }
 
     /* ── LAYOUT ── */
     .hidden { display: none !important; }
@@ -47,7 +50,7 @@
     .user-info-small .name { font-size: .82rem; font-weight: 600; }
     .role-badge { font-size: .68rem; padding: .1rem .4rem; border-radius: .3rem; font-weight: 700; }
     .role-badge.role-admin  { background: rgba(168,85,247,.2); color: var(--purple); }
-    .role-badge.role-member { background: rgba(59,130,246,.2); color: var(--blue); }
+    .role-badge.role-member { background: rgba(59,130,246,.2);  color: var(--blue); }
     .btn-logout { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: .2rem; }
     .btn-logout:hover { color: var(--red); }
 
@@ -98,41 +101,55 @@
     /* ── TOAST ── */
     #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: .75rem 1.25rem; font-size: .88rem; z-index: 999; transition: opacity .3s; opacity: 0; pointer-events: none; }
     #toast.show { opacity: 1; }
-
-    /* ── PROFILE ── */
-    .jwt-box { background: var(--bg); border: 1px solid var(--border); border-radius: .5rem; padding: 1rem; font-family: 'Courier New', monospace; font-size: .75rem; white-space: pre-wrap; word-break: break-all; color: var(--green); margin-top: .75rem; max-height: 300px; overflow-y: auto; }
-    .section-title { font-size: .9rem; font-weight: 600; color: var(--muted); margin-bottom: .75rem; margin-top: 1.5rem; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-    .info-card { background: var(--surface2); border-radius: .5rem; padding: .75rem 1rem; }
-    .info-label { font-size: .72rem; color: var(--muted); margin-bottom: .2rem; }
-    .info-value { font-size: .9rem; font-weight: 600; }
     .empty-state { text-align: center; color: var(--muted); padding: 3rem; }
   </style>
 </head>
 <body>
+<script src="config.js"></script>
 
 <!-- AUTH PAGE -->
 <div id="auth-page">
   <div class="auth-box">
     <div class="auth-logo">🔐</div>
     <div class="auth-title">Task Board</div>
-    <div class="auth-subtitle">Final Lab — ENGSE207 Security Architecture</div>
-    <div class="form-group">
-      <label>Email</label>
-      <input id="login-email" type="email" value="alice@lab.local" placeholder="you@lab.local">
+    <div class="auth-subtitle">Final Lab Sec2 — ENGSE207</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"    onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+      <button class="auth-tab"        id="tab-register" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
     </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input id="login-password" type="password" value="alice123" placeholder="password">
+
+    <!-- Login form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label>Email</label>
+        <input id="login-email" type="email" placeholder="you@lab.local">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="login-password" type="password" placeholder="password">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
     </div>
-    <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+
+    <!-- Register form -->
+    <div id="form-register" class="hidden">
+      <div class="form-group">
+        <label>Username</label>
+        <input id="reg-username" type="text" placeholder="ชื่อผู้ใช้">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="reg-email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password (อย่างน้อย 6 ตัวอักษร)</label>
+        <input id="reg-password" type="password" placeholder="password">
+      </div>
+      <button class="btn-primary" onclick="doRegister()">สมัครสมาชิก</button>
+    </div>
+
     <div id="auth-msg" class="auth-msg"></div>
-    <div style="margin-top:1rem;padding:.75rem;background:rgba(59,130,246,.1);border-radius:.5rem;font-size:.82rem;line-height:1.7">
-      <strong>🔑 Seed Users:</strong><br>
-      alice@lab.local / alice123 (member)<br>
-      bob@lab.local / bob456 (member)<br>
-      admin@lab.local / adminpass (admin)
-    </div>
   </div>
 </div>
 
@@ -145,11 +162,8 @@
         <span class="nav-icon">✅</span> Tasks
         <span class="badge-count" id="task-count">0</span>
       </button>
-      <button class="nav-item" data-page="profile" onclick="showPage('profile')">
-        <span class="nav-icon">👤</span> Profile &amp; JWT
-      </button>
-      <a href="logs.html" target="_blank" class="nav-item" style="text-decoration:none;">
-        <span class="nav-icon">📊</span> Log Dashboard
+      <a href="activity.html" target="_blank" class="nav-item" style="text-decoration:none;">
+        <span class="nav-icon">📅</span> Activity Timeline
         <span style="margin-left:auto;font-size:.7rem;color:var(--muted)">↗</span>
       </a>
     </div>
@@ -166,7 +180,6 @@
   </nav>
 
   <div class="main-content">
-    <!-- TASKS PAGE -->
     <div id="page-tasks">
       <div class="page-header">
         <div class="page-title">✅ Tasks</div>
@@ -182,14 +195,6 @@
         <div class="empty-state">⏳ กำลังโหลด...</div>
       </div>
     </div>
-
-    <!-- PROFILE PAGE -->
-    <div id="page-profile" class="hidden">
-      <div class="page-header">
-        <div class="page-title">👤 Profile &amp; JWT Inspector</div>
-      </div>
-      <div id="profile-content"></div>
-    </div>
   </div>
 </div>
 
@@ -197,24 +202,16 @@
 <div id="task-modal" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-title" id="modal-title">สร้าง Task ใหม่</div>
-    <div class="form-group">
-      <label>Title *</label>
-      <input id="task-title" type="text" placeholder="ชื่อ task">
-    </div>
-    <div class="form-group">
-      <label>Description</label>
-      <textarea id="task-desc" placeholder="รายละเอียด (ถ้ามี)"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Status</label>
+    <div class="form-group"><label>Title *</label><input id="task-title" type="text" placeholder="ชื่อ task"></div>
+    <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="รายละเอียด (ถ้ามี)"></textarea></div>
+    <div class="form-group"><label>Status</label>
       <select id="task-status">
         <option value="TODO">TODO</option>
         <option value="IN_PROGRESS">IN PROGRESS</option>
         <option value="DONE">DONE</option>
       </select>
     </div>
-    <div class="form-group">
-      <label>Priority</label>
+    <div class="form-group"><label>Priority</label>
       <select id="task-priority">
         <option value="low">Low</option>
         <option value="medium" selected>Medium</option>
@@ -232,7 +229,7 @@
 <div id="delete-modal" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-title">⚠️ ยืนยันการลบ</div>
-    <p style="color:var(--muted);font-size:.9rem;">คุณต้องการลบ task นี้จริงหรือไม่? ไม่สามารถย้อนกลับได้</p>
+    <p style="color:var(--muted);font-size:.9rem;">คุณต้องการลบ task นี้จริงหรือไม่?</p>
     <div class="modal-footer">
       <button class="btn-sm btn-outline" onclick="document.getElementById('delete-modal').classList.add('hidden')">ยกเลิก</button>
       <button class="btn-sm btn-red" id="delete-confirm-btn">ลบ</button>
@@ -243,20 +240,31 @@
 <div id="toast"></div>
 
 <script>
-const API = '';
+const AUTH = window.APP_CONFIG.AUTH_URL;
+const TASK = window.APP_CONFIG.TASK_URL;
+
 let token         = localStorage.getItem('jwt_token');
 let currentUser   = null;
 let allTasks      = [];
 let currentFilter = 'ALL';
 let editingTaskId = null;
 
-/* ── AUTH ── */
+/* ── AUTH TABS ── */
+function switchAuthTab(tab) {
+  document.getElementById('form-login').classList.toggle('hidden',    tab !== 'login');
+  document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('auth-msg').textContent = '';
+}
+
+/* ── LOGIN ── */
 async function doLogin() {
   const email    = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   if (!email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
   try {
-    const res  = await fetch(`${API}/api/auth/login`, {
+    const res  = await fetch(`${AUTH}/api/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
@@ -268,9 +276,29 @@ async function doLogin() {
     } else {
       showAuthMsg('❌ ' + (data.error || 'Login ล้มเหลว'), 'error');
     }
-  } catch (e) {
-    showAuthMsg('❌ ไม่สามารถเชื่อมต่อ server ได้', 'error');
-  }
+  } catch (e) { showAuthMsg('❌ ไม่สามารถเชื่อมต่อ server ได้', 'error'); }
+}
+
+/* ── REGISTER ── */
+async function doRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!username || !email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+  try {
+    const res  = await fetch(`${AUTH}/api/auth/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showAuthMsg('✅ สมัครสมาชิกสำเร็จ กรุณา Login', 'success');
+      switchAuthTab('login');
+      document.getElementById('login-email').value = email;
+    } else {
+      showAuthMsg('❌ ' + (data.error || 'สมัครไม่สำเร็จ'), 'error');
+    }
+  } catch (e) { showAuthMsg('❌ ไม่สามารถเชื่อมต่อ server ได้', 'error'); }
 }
 
 function showAuthMsg(msg, type) {
@@ -303,19 +331,18 @@ function initApp(user) {
 
 /* ── NAV ── */
 function showPage(page) {
-  ['tasks', 'profile'].forEach(p => {
+  ['tasks'].forEach(p => {
     document.getElementById(`page-${p}`).classList.toggle('hidden', p !== page);
     const btn = document.querySelector(`[data-page="${p}"]`);
     if (btn) btn.classList.toggle('active', p === page);
   });
-  if (page === 'tasks')   loadTasks();
-  if (page === 'profile') loadProfile();
+  if (page === 'tasks') loadTasks();
 }
 
 /* ── TASKS ── */
 async function loadTasks() {
   try {
-    const res  = await fetch(`${API}/api/tasks/`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const res  = await fetch(`${TASK}/api/tasks/`, { headers: { 'Authorization': `Bearer ${token}` } });
     if (res.status === 401) { doLogout(); return; }
     const data = await res.json();
     allTasks = data.tasks || [];
@@ -354,7 +381,6 @@ function renderTasks() {
         <div class="task-meta">
           <span class="tag ${sTag}">${t.status}</span>
           <span class="tag ${pTag}">${t.priority}</span>
-          ${t.username ? `<span class="task-owner">👤 ${escHtml(t.username)}</span>` : ''}
         </div>
       </div>`;
   }).join('');
@@ -393,7 +419,7 @@ async function submitTask() {
   const status      = document.getElementById('task-status').value;
   const priority    = document.getElementById('task-priority').value;
   if (!title) { showToast('❌ กรุณากรอก Title'); return; }
-  const url    = editingTaskId ? `${API}/api/tasks/${editingTaskId}` : `${API}/api/tasks/`;
+  const url    = editingTaskId ? `${TASK}/api/tasks/${editingTaskId}` : `${TASK}/api/tasks/`;
   const method = editingTaskId ? 'PUT' : 'POST';
   try {
     const res = await fetch(url, {
@@ -413,44 +439,10 @@ function confirmDelete(id) {
 async function deleteTask(id) {
   document.getElementById('delete-modal').classList.add('hidden');
   try {
-    const res = await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await fetch(`${TASK}/api/tasks/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
     if (res.ok) { showToast('🗑️ ลบสำเร็จ'); loadTasks(); }
     else { const d = await res.json(); showToast('❌ ' + (d.error || 'ลบไม่สำเร็จ')); }
   } catch (e) { showToast('❌ ไม่สามารถเชื่อมต่อได้'); }
-}
-
-/* ── PROFILE ── */
-async function loadProfile() {
-  let user = currentUser;
-  try {
-    const res = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) { const data = await res.json(); user = data.user; }
-  } catch (_) {}
-  const decoded = parseJwt(token);
-  const exp = decoded?.exp ? new Date(decoded.exp * 1000).toLocaleString('th-TH') : '—';
-  const iat = decoded?.iat ? new Date(decoded.iat * 1000).toLocaleString('th-TH') : '—';
-  document.getElementById('profile-content').innerHTML = `
-    <div class="section-title">ข้อมูลผู้ใช้</div>
-    <div class="info-grid">
-      <div class="info-card"><div class="info-label">Username</div><div class="info-value">${escHtml(user?.username||'—')}</div></div>
-      <div class="info-card"><div class="info-label">Email</div><div class="info-value" style="font-size:.82rem">${escHtml(user?.email||'—')}</div></div>
-      <div class="info-card"><div class="info-label">Role</div><div class="info-value"><span class="role-badge role-${user?.role}">${user?.role||'—'}</span></div></div>
-      <div class="info-card"><div class="info-label">Last Login</div><div class="info-value" style="font-size:.82rem">${user?.last_login?new Date(user.last_login).toLocaleString('th-TH'):'—'}</div></div>
-    </div>
-    <div class="section-title">JWT Inspector</div>
-    <div class="info-grid">
-      <div class="info-card"><div class="info-label">Issued At</div><div class="info-value" style="font-size:.82rem">${iat}</div></div>
-      <div class="info-card"><div class="info-label">Expires At</div><div class="info-value" style="font-size:.82rem">${exp}</div></div>
-    </div>
-    <div class="section-title">JWT Payload</div>
-    <div class="jwt-box">${escHtml(JSON.stringify(decoded, null, 2))}</div>
-    <div class="section-title">Raw Token</div>
-    <div class="jwt-box" style="color:var(--yellow)">${escHtml(token||'—')}</div>`;
-}
-
-function parseJwt(token) {
-  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
-  catch (_) { return null; }
 }
 
 /* ── UTILS ── */
@@ -473,7 +465,7 @@ document.getElementById('login-password').addEventListener('keydown', e => { if 
 if (token) {
   (async () => {
     try {
-      const res  = await fetch(`${API}/api/auth/verify`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res  = await fetch(`${AUTH}/api/auth/verify`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
       if (data.valid) initApp(data.user);
       else { localStorage.removeItem('jwt_token'); token = null; }
