@@ -24,6 +24,29 @@ async function start() {
       await new Promise(r => setTimeout(r, 3000));
     }
   }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER NOT NULL,
+      title       VARCHAR(255) NOT NULL,
+      description TEXT,
+      status      VARCHAR(20) NOT NULL DEFAULT 'TODO'
+                  CHECK (status IN ('TODO','IN_PROGRESS','DONE')),
+      priority    VARCHAR(10) NOT NULL DEFAULT 'medium'
+                  CHECK (priority IN ('low','medium','high')),
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS logs (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER,
+      action     VARCHAR(100),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+  console.log('[task-service] Tables ready');
+
   app.listen(PORT, () => console.log(`[task-service] Running on :${PORT}`));
 }
 
