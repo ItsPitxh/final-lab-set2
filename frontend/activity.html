@@ -4,392 +4,412 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📅 Activity Timeline — Final Lab Sec2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:      #0a0f1e;
-      --surface: #111827;
-      --surface2:#1a2235;
-      --border:  #1e3a5f;
-      --border2: #2a4a7f;
-      --text:    #e2e8f0;
-      --muted:   #6b7fa3;
-      --blue:    #3b82f6;
+      --bg:      #060d1f;
+      --bg2:     #0a1628;
+      --surface: #0f1e35;
+      --surface2:#152340;
+      --surface3:#1c2e4a;
+      --border:  rgba(99,137,210,0.15);
+      --border2: rgba(99,137,210,0.28);
+      --text:    #e8eef8;
+      --text2:   #a8bcd8;
+      --muted:   #5a7299;
+      --blue:    #4f8ef7;
       --blue2:   #2563eb;
-      --green:   #22c55e;
-      --yellow:  #f59e0b;
-      --red:     #ef4444;
-      --purple:  #a855f7;
-      --teal:    #14b8a6;
+      --indigo:  #6366f1;
+      --green:   #34d399;
+      --yellow:  #fbbf24;
+      --red:     #f87171;
+      --purple:  #c084fc;
+      --teal:    #2dd4bf;
+      --orange:  #fb923c;
     }
-
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 10px; }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--surface); }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    /* ════ LOGIN OVERLAY ════ */
+    #login-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      overflow: hidden;
+    }
+    #login-overlay::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(79,142,247,.1), transparent 70%);
+      top: -150px; right: -100px;
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+    #login-overlay::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(99,102,241,.08), transparent 70%);
+      bottom: -100px; left: -80px;
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+      animation-delay: -4s;
+    }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-20px) scale(1.04)} }
 
-    /* ── HEADER ── */
-    .header {
+    .login-box {
+      position: relative;
+      z-index: 1;
       background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: .9rem 1.75rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(10px);
+      border: 1px solid var(--border2);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      width: 380px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
     }
-    .header-left { display: flex; align-items: center; gap: .75rem; }
-    .header-left h1 { font-size: 1rem; font-weight: 800; letter-spacing: -.3px; }
-    .header-right { display: flex; gap: 1rem; align-items: center; }
+    .login-brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-brand .icon-wrap {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, var(--blue2), var(--indigo));
+      border-radius: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 10px 30px rgba(79,142,247,.35);
+      margin-bottom: .85rem;
+    }
+    .login-brand h2 { font-size: 1.35rem; font-weight: 900; letter-spacing: -.4px; }
+    .login-brand p  { color: var(--muted); font-size: .83rem; margin-top: .25rem; }
+
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label {
+      display: block;
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .7px;
+      margin-bottom: .45rem;
+    }
+    .form-group input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .72rem 1rem;
+      border-radius: .75rem;
+      font-size: .92rem; outline: none;
+      transition: all .2s; font-family: inherit;
+    }
+    .form-group input::placeholder { color: var(--muted); }
+    .form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(79,142,247,.15); background: var(--surface); }
+
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue2), var(--indigo));
+      color: #fff; border: none;
+      padding: .82rem; border-radius: .75rem;
+      font-size: .95rem; font-weight: 700;
+      cursor: pointer; margin-top: .75rem; font-family: inherit;
+      box-shadow: 0 4px 20px rgba(79,142,247,.35);
+      transition: all .25s; position: relative; overflow: hidden;
+    }
+    .btn-login::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.1),transparent); opacity:0; transition:opacity .2s; }
+    .btn-login:hover::after { opacity: 1; }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(79,142,247,.5); }
+    #l-err { color: #fca5a5; font-size: .82rem; margin-top: .65rem; min-height: 1.2rem; text-align: center; }
+
+    /* ════ HEADER ════ */
+    .header {
+      background: rgba(15,30,53,.9);
+      border-bottom: 1px solid var(--border);
+      padding: .85rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+    }
+    .header-left { display: flex; align-items: center; gap: .85rem; }
+    .header-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--blue2), var(--indigo));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      box-shadow: 0 3px 10px rgba(79,142,247,.3);
+    }
+    .header-title { font-size: .95rem; font-weight: 800; letter-spacing: -.3px; }
+    .header-right { display: flex; gap: .75rem; align-items: center; }
+
     .user-pill {
+      display: none;
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: .35rem .85rem .35rem .4rem;
-      font-size: .8rem;
-      display: flex;
-      align-items: center;
-      gap: .45rem;
-      color: var(--muted);
+      padding: .3rem .75rem .3rem .35rem;
+      align-items: center; gap: .5rem;
+      font-size: .78rem; color: var(--text2);
     }
-    .user-pill .dot {
-      width: 24px; height: 24px;
+    .user-pill-dot {
+      width: 26px; height: 26px;
       background: linear-gradient(135deg, var(--blue), var(--purple));
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: .72rem; font-weight: 800; color: #fff;
+      box-shadow: 0 2px 6px rgba(79,142,247,.3);
     }
-    .back-link {
-      color: var(--blue);
-      font-size: .82rem;
+
+    .back-btn {
+      display: flex; align-items: center; gap: .4rem;
+      color: var(--text2); font-size: .82rem; font-weight: 600;
       text-decoration: none;
-      display: flex; align-items: center; gap: .3rem;
-      padding: .35rem .75rem;
-      border-radius: .5rem;
+      background: var(--surface2);
       border: 1px solid var(--border);
+      padding: .4rem .9rem;
+      border-radius: .6rem;
       transition: all .15s;
     }
-    .back-link:hover { background: var(--surface2); }
+    .back-btn:hover { border-color: var(--border2); color: var(--text); }
 
-    /* ── CONTAINER ── */
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
+    /* ════ MAIN ════ */
+    .page { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
 
-    /* ── STATS ── */
+    /* ════ STATS ════ */
     .stats {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: .85rem;
+      gap: 1rem;
       margin-bottom: 2rem;
     }
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 1rem;
-      text-align: center;
-      transition: all .2s;
+      border-radius: 1.1rem;
+      padding: 1.1rem 1rem;
       position: relative;
       overflow: hidden;
+      transition: all .2s;
     }
     .stat-card::after {
       content: '';
       position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,.02), transparent);
-      pointer-events: none;
+      top: 0; left: 0; right: 0;
+      height: 2px;
     }
-    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-    .stat-label {
-      font-size: .68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      color: var(--muted);
-      margin-bottom: .4rem;
-    }
-    .stat-value {
-      font-size: 1.75rem;
-      font-weight: 800;
-      letter-spacing: -.5px;
-    }
-    .stat-sub { font-size: .7rem; color: var(--muted); margin-top: .15rem; }
+    .stat-card.s-total::after  { background: linear-gradient(90deg, var(--blue), var(--indigo)); }
+    .stat-card.s-reg::after    { background: linear-gradient(90deg, var(--green), var(--teal)); }
+    .stat-card.s-login::after  { background: linear-gradient(90deg, var(--blue), var(--blue2)); }
+    .stat-card.s-tasks::after  { background: linear-gradient(90deg, var(--teal), var(--indigo)); }
+    .stat-card.s-status::after { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.25); }
 
-    /* ── CONTROLS ── */
+    .stat-icon { font-size: 1.3rem; margin-bottom: .5rem; }
+    .stat-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin-bottom: .3rem; }
+    .stat-value { font-size: 1.85rem; font-weight: 900; letter-spacing: -.5px; line-height: 1; }
+
+    /* ════ CONTROLS ════ */
     .controls {
       display: flex;
-      gap: .75rem;
       align-items: center;
+      gap: .75rem;
       flex-wrap: wrap;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
     }
 
-    .tabs {
+    .tab-group {
       display: flex;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: .75rem;
-      padding: .2rem;
+      border-radius: .85rem;
+      padding: .22rem;
       gap: .2rem;
     }
-    .tab {
-      padding: .45rem 1rem;
-      border-radius: .55rem;
+    .tab-btn {
+      padding: .48rem 1.1rem;
+      border-radius: .65rem;
       border: none;
       cursor: pointer;
       font-size: .82rem;
-      font-weight: 600;
+      font-weight: 700;
       background: none;
       color: var(--muted);
-      transition: all .15s;
+      transition: all .18s;
+      font-family: inherit;
     }
-    .tab.active { background: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(59,130,246,.35); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--blue2), var(--indigo));
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(79,142,247,.4);
+    }
 
     .filter-select {
       background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: .5rem .9rem;
-      border-radius: .6rem;
-      font-size: .83rem;
+      border: 1px solid var(--border2);
+      color: var(--text2);
+      padding: .52rem 1rem;
+      border-radius: .7rem;
+      font-size: .82rem;
+      font-weight: 500;
       outline: none;
-      transition: border-color .2s;
       cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
     }
     .filter-select:focus { border-color: var(--blue); }
 
     .btn-refresh {
-      background: var(--surface2);
+      background: var(--surface);
       border: 1px solid var(--border2);
-      color: var(--text);
-      padding: .5rem 1rem;
-      border-radius: .6rem;
-      font-size: .83rem;
+      color: var(--text2);
+      padding: .52rem 1rem;
+      border-radius: .7rem;
+      font-size: .82rem;
       font-weight: 600;
       cursor: pointer;
       transition: all .15s;
-      display: flex; align-items: center; gap: .4rem;
+      font-family: inherit;
+      display: flex; align-items: center; gap: .35rem;
     }
-    .btn-refresh:hover { background: var(--surface); }
+    .btn-refresh:hover { background: var(--surface2); color: var(--text); }
 
-    .refresh-time {
-      margin-left: auto;
-      font-size: .75rem;
-      color: var(--muted);
-    }
+    .refresh-meta { margin-left: auto; font-size: .75rem; color: var(--muted); }
 
-    /* ── TIMELINE ── */
-    .timeline-wrap {
+    /* ════ TIMELINE ════ */
+    .timeline {
       position: relative;
+      padding-left: .5rem;
     }
-    .timeline-wrap::before {
+    .timeline::before {
       content: '';
       position: absolute;
-      left: 1.1rem;
-      top: 1.5rem;
-      bottom: 0;
+      left: 1.35rem;
+      top: 2rem;
+      bottom: 2rem;
       width: 2px;
-      background: linear-gradient(180deg, var(--border2), var(--border), transparent);
+      background: linear-gradient(180deg,
+        rgba(79,142,247,.5) 0%,
+        rgba(99,102,241,.3) 50%,
+        rgba(79,142,247,.05) 100%);
+      border-radius: 2px;
     }
 
-    .activity-item {
+    .activity-row {
       display: flex;
-      gap: 1.1rem;
-      margin-bottom: 1rem;
-      padding-left: .25rem;
+      gap: 1.2rem;
+      margin-bottom: .85rem;
+      animation: fadeSlide .25s ease both;
     }
+    @keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } }
 
-    .activity-dot {
-      width: 1.85rem;
-      height: 1.85rem;
+    .timeline-dot {
+      width: 2.7rem; height: 2.7rem;
       border-radius: 50%;
-      border: 2px solid var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .8rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
       flex-shrink: 0;
-      margin-top: .15rem;
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 3px rgba(0,0,0,.3), 0 3px 12px rgba(0,0,0,.3);
       z-index: 1;
-      box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
-    .dot-REGISTERED  { background: var(--green);  }
-    .dot-LOGIN       { background: var(--blue);   }
-    .dot-CREATED     { background: var(--teal);   }
-    .dot-STATUS      { background: var(--yellow); }
-    .dot-DELETED     { background: var(--red);    }
+    .dot-REGISTERED { background: linear-gradient(135deg, var(--green), var(--teal)); }
+    .dot-LOGIN      { background: linear-gradient(135deg, var(--blue), var(--indigo)); }
+    .dot-CREATED    { background: linear-gradient(135deg, var(--teal), var(--indigo)); }
+    .dot-STATUS     { background: linear-gradient(135deg, var(--yellow), var(--orange)); }
+    .dot-DELETED    { background: linear-gradient(135deg, var(--red), #dc2626); }
 
     .activity-card {
       flex: 1;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: .85rem;
-      padding: .85rem 1.1rem;
-      transition: all .15s;
+      border-radius: 1rem;
+      padding: .9rem 1.1rem;
+      transition: all .2s;
     }
     .activity-card:hover {
       border-color: var(--border2);
-      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      box-shadow: 0 6px 25px rgba(0,0,0,.2);
     }
 
-    .activity-card-header {
+    .ac-header {
       display: flex;
       align-items: center;
-      gap: .6rem;
-      margin-bottom: .4rem;
+      gap: .55rem;
+      margin-bottom: .45rem;
       flex-wrap: wrap;
     }
 
     .event-badge {
-      font-size: .68rem;
-      font-weight: 800;
-      padding: .2rem .6rem;
-      border-radius: .4rem;
-      letter-spacing: .3px;
-      text-transform: uppercase;
+      font-size: .66rem; font-weight: 800;
+      padding: .2rem .65rem; border-radius: .45rem;
+      letter-spacing: .3px; text-transform: uppercase;
     }
-    .badge-REGISTERED { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
-    .badge-LOGIN      { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.2); }
-    .badge-CREATED    { background: rgba(20,184,166,.12); color: #2dd4bf; border: 1px solid rgba(20,184,166,.2); }
-    .badge-STATUS     { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
-    .badge-DELETED    { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+    .badge-REGISTERED { background:rgba(52,211,153,.1);  color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+    .badge-LOGIN      { background:rgba(79,142,247,.1);  color:#93c5fd; border:1px solid rgba(79,142,247,.2); }
+    .badge-CREATED    { background:rgba(45,212,191,.1);  color:#5eead4; border:1px solid rgba(45,212,191,.2); }
+    .badge-STATUS     { background:rgba(251,191,36,.1);  color:#fde68a; border:1px solid rgba(251,191,36,.2); }
+    .badge-DELETED    { background:rgba(248,113,113,.1); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
 
-    .user-tag {
-      font-size: .76rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: .25rem;
+    .ac-user {
+      font-size: .75rem; color: var(--muted);
+      display: flex; align-items: center; gap: .3rem;
     }
-    .user-tag strong { color: var(--text); font-weight: 600; }
+    .ac-user strong { color: var(--text2); font-weight: 600; }
 
-    .activity-summary {
-      font-size: .875rem;
-      color: var(--text);
-      line-height: 1.5;
-      margin-bottom: .4rem;
+    .ac-summary {
+      font-size: .875rem; color: var(--text);
+      line-height: 1.5; margin-bottom: .5rem;
     }
 
-    .activity-footer {
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      flex-wrap: wrap;
+    .ac-footer {
+      display: flex; align-items: center;
+      gap: .75rem; flex-wrap: wrap;
     }
-    .activity-time {
-      font-size: .72rem;
-      color: var(--muted);
-      font-family: 'Courier New', monospace;
+    .ac-time {
+      font-size: .7rem; color: var(--muted);
+      display: flex; align-items: center; gap: .25rem;
     }
-    .meta-chips { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .meta-chips { display: flex; gap: .3rem; flex-wrap: wrap; }
     .meta-chip {
-      font-size: .68rem;
-      color: var(--muted);
-      background: rgba(255,255,255,.04);
+      font-size: .67rem; color: var(--muted);
+      background: rgba(255,255,255,.03);
       border: 1px solid var(--border);
-      padding: .1rem .5rem;
-      border-radius: .35rem;
+      padding: .12rem .55rem; border-radius: .35rem;
     }
 
+    /* ════ EMPTY ════ */
     .empty {
       text-align: center;
-      padding: 4rem 2rem;
-      color: var(--muted);
+      padding: 5rem 2rem;
     }
-    .empty .icon { font-size: 2.5rem; margin-bottom: .75rem; opacity: .4; }
-    .empty p { font-size: .9rem; }
-
-    /* ── LOGIN OVERLAY ── */
-    #login-overlay {
-      position: fixed; inset: 0;
-      background: radial-gradient(ellipse at 60% 30%, rgba(59,130,246,.08), transparent 60%),
-                  var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100;
-    }
-    .login-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      padding: 2.25rem;
-      width: 360px;
-      box-shadow: 0 30px 80px rgba(0,0,0,.5);
-    }
-    .login-box .brand { text-align: center; margin-bottom: 1.6rem; }
-    .login-box .brand .logo { font-size: 2.2rem; }
-    .login-box .brand h2 { font-size: 1.2rem; font-weight: 800; margin-top: .35rem; }
-    .login-box .brand p  { color: var(--muted); font-size: .82rem; margin-top: .2rem; }
-
-    .form-group { margin-bottom: 1rem; }
-    .form-group label {
-      display: block;
-      font-size: .75rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      margin-bottom: .4rem;
-    }
-    .form-group input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: .7rem .9rem;
-      border-radius: .6rem;
-      font-size: .92rem;
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .form-group input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
-    }
-
-    .btn-login {
-      width: 100%;
-      background: linear-gradient(135deg, var(--blue), var(--blue2));
-      color: #fff;
-      border: none;
-      padding: .8rem;
-      border-radius: .65rem;
-      font-size: .95rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: .5rem;
-      box-shadow: 0 4px 15px rgba(59,130,246,.35);
-      transition: all .2s;
-    }
-    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,.5); }
-    #l-err { color: #f87171; font-size: .82rem; margin-top: .6rem; min-height: 1.2rem; text-align: center; }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: .35; }
+    .empty h3 { font-size: 1rem; font-weight: 700; color: var(--text2); margin-bottom: .4rem; }
+    .empty p  { font-size: .85rem; color: var(--muted); }
   </style>
 </head>
 <body>
 <script src="config.js"></script>
 
-<!-- Login overlay -->
+<!-- ════ LOGIN OVERLAY ════ -->
 <div id="login-overlay">
   <div class="login-box">
-    <div class="brand">
-      <div class="logo">📅</div>
+    <div class="login-brand">
+      <div class="icon-wrap">📅</div>
       <h2>Activity Timeline</h2>
-      <p>กรุณา login เพื่อดู activities</p>
+      <p>Login เพื่อดู activity log ของระบบ</p>
     </div>
     <div class="form-group">
       <label>Email</label>
-      <input id="l-email" type="email" placeholder="email@example.com">
+      <input id="l-email" type="email" placeholder="you@lab.local">
     </div>
     <div class="form-group">
       <label>Password</label>
@@ -400,124 +420,114 @@
   </div>
 </div>
 
-<!-- Header -->
-<div class="header">
+<!-- ════ HEADER ════ -->
+<header class="header">
   <div class="header-left">
-    <h1>📅 Activity Timeline</h1>
+    <div class="header-icon">📅</div>
+    <span class="header-title">Activity Timeline</span>
   </div>
   <div class="header-right">
-    <div class="user-pill" id="user-pill" style="display:none">
-      <div class="dot" id="user-dot">?</div>
+    <div class="user-pill" id="user-pill">
+      <div class="user-pill-dot" id="user-dot">?</div>
       <span id="logged-as">—</span>
     </div>
-    <a href="index.html" class="back-link">← Task Board</a>
+    <a href="index.html" class="back-btn">← Task Board</a>
   </div>
-</div>
+</header>
 
-<!-- Main -->
-<div class="container">
+<!-- ════ MAIN PAGE ════ -->
+<div class="page">
 
   <!-- Stats -->
   <div class="stats">
-    <div class="stat-card">
+    <div class="stat-card s-total">
+      <div class="stat-icon">📊</div>
       <div class="stat-label">ทั้งหมด</div>
-      <div class="stat-value" id="stat-total" style="color:var(--text)">—</div>
+      <div class="stat-value" id="stat-total" style="color:var(--blue)">—</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label" style="color:var(--green)">Registered</div>
+    <div class="stat-card s-reg">
+      <div class="stat-icon">🎉</div>
+      <div class="stat-label">Registered</div>
       <div class="stat-value" style="color:var(--green)" id="stat-reg">—</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label" style="color:var(--blue)">Logins</div>
+    <div class="stat-card s-login">
+      <div class="stat-icon">🔑</div>
+      <div class="stat-label">Logins</div>
       <div class="stat-value" style="color:var(--blue)" id="stat-login">—</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label" style="color:var(--teal)">Tasks Created</div>
+    <div class="stat-card s-tasks">
+      <div class="stat-icon">✅</div>
+      <div class="stat-label">Tasks Created</div>
       <div class="stat-value" style="color:var(--teal)" id="stat-tasks">—</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label" style="color:var(--yellow)">Status Changes</div>
+    <div class="stat-card s-status">
+      <div class="stat-icon">🔄</div>
+      <div class="stat-label">Status Changes</div>
       <div class="stat-value" style="color:var(--yellow)" id="stat-status">—</div>
     </div>
   </div>
 
   <!-- Controls -->
   <div class="controls">
-    <div class="tabs">
-      <button class="tab active" id="tab-mine" onclick="switchTab('mine')">🙋 กิจกรรมของฉัน</button>
-      <button class="tab" id="tab-all" onclick="switchTab('all')" style="display:none">👑 ทั้งระบบ</button>
+    <div class="tab-group">
+      <button class="tab-btn active" id="tab-mine" onclick="switchTab('mine')">🙋 กิจกรรมของฉัน</button>
+      <button class="tab-btn" id="tab-all" onclick="switchTab('all')" style="display:none">👑 ทั้งระบบ</button>
     </div>
 
     <select class="filter-select" id="f-event" onchange="loadActivities()">
       <option value="">Event: ทั้งหมด</option>
-      <option value="USER_REGISTERED">USER_REGISTERED</option>
-      <option value="USER_LOGIN">USER_LOGIN</option>
-      <option value="TASK_CREATED">TASK_CREATED</option>
-      <option value="TASK_STATUS_CHANGED">TASK_STATUS_CHANGED</option>
-      <option value="TASK_DELETED">TASK_DELETED</option>
+      <option value="USER_REGISTERED">🎉 USER_REGISTERED</option>
+      <option value="USER_LOGIN">🔑 USER_LOGIN</option>
+      <option value="TASK_CREATED">✅ TASK_CREATED</option>
+      <option value="TASK_STATUS_CHANGED">🔄 TASK_STATUS_CHANGED</option>
+      <option value="TASK_DELETED">🗑️ TASK_DELETED</option>
     </select>
 
     <button class="btn-refresh" onclick="loadActivities()">🔄 Refresh</button>
-    <span class="refresh-time" id="refresh-time"></span>
+    <span class="refresh-meta" id="refresh-meta"></span>
   </div>
 
   <!-- Timeline -->
-  <div id="timeline-wrap"></div>
+  <div id="timeline-wrap">
+    <div class="empty">
+      <div class="empty-icon">⏳</div>
+      <h3>กำลังโหลด...</h3>
+    </div>
+  </div>
 </div>
 
 <script>
 const ACTIVITY = window.APP_CONFIG.ACTIVITY_URL;
 const AUTH     = window.APP_CONFIG.AUTH_URL;
 
-let token       = localStorage.getItem('jwt_token');
-let currentUser = null;
-let currentTab  = 'mine';
+let token = localStorage.getItem('jwt_token');
+let currentUser = null, currentTab = 'mine';
 
-const BADGE_MAP = {
-  USER_REGISTERED:     'REGISTERED',
-  USER_LOGIN:          'LOGIN',
-  TASK_CREATED:        'CREATED',
-  TASK_STATUS_CHANGED: 'STATUS',
-  TASK_DELETED:        'DELETED'
-};
-const ICON_MAP = {
-  USER_REGISTERED: '🎉', USER_LOGIN: '🔑',
-  TASK_CREATED: '✅', TASK_STATUS_CHANGED: '🔄', TASK_DELETED: '🗑️'
-};
+const BADGE = { USER_REGISTERED:'REGISTERED', USER_LOGIN:'LOGIN', TASK_CREATED:'CREATED', TASK_STATUS_CHANGED:'STATUS', TASK_DELETED:'DELETED' };
+const ICON  = { USER_REGISTERED:'🎉', USER_LOGIN:'🔑', TASK_CREATED:'✅', TASK_STATUS_CHANGED:'🔄', TASK_DELETED:'🗑️' };
 
 async function doLogin() {
-  const email    = document.getElementById('l-email').value.trim();
+  const email = document.getElementById('l-email').value.trim();
   const password = document.getElementById('l-pass').value;
   try {
     const res  = await fetch(`${AUTH}/api/auth/login`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-    if (res.ok) {
-      token = data.token;
-      localStorage.setItem('jwt_token', token);
-      initPage(data.user);
-    } else {
-      document.getElementById('l-err').textContent = data.error || 'Login ล้มเหลว';
-    }
-  } catch (e) {
-    document.getElementById('l-err').textContent = 'ไม่สามารถเชื่อมต่อได้';
-  }
+    if (res.ok) { token = data.token; localStorage.setItem('jwt_token', token); initPage(data.user); }
+    else document.getElementById('l-err').textContent = data.error || 'Login ล้มเหลว';
+  } catch { document.getElementById('l-err').textContent = 'ไม่สามารถเชื่อมต่อได้'; }
 }
 
 function initPage(user) {
   currentUser = user;
   document.getElementById('login-overlay').style.display = 'none';
-
-  const initial = (user.username || '?').charAt(0).toUpperCase();
-  document.getElementById('user-dot').textContent  = initial;
-  document.getElementById('logged-as').textContent = `${user.username} · ${user.role}`;
+  const init = (user.username || '?').charAt(0).toUpperCase();
+  document.getElementById('user-dot').textContent = init;
+  document.getElementById('logged-as').textContent = `${user.username}  ·  ${user.role}`;
   document.getElementById('user-pill').style.display = 'flex';
-
-  if (user.role === 'admin') {
-    document.getElementById('tab-all').style.display = '';
-  }
+  if (user.role === 'admin') document.getElementById('tab-all').style.display = '';
   loadActivities();
 }
 
@@ -535,7 +545,7 @@ async function loadActivities() {
   if (eventType) params.set('event_type', eventType);
 
   document.getElementById('timeline-wrap').innerHTML =
-    '<div class="empty"><div class="icon">⏳</div><p>กำลังโหลด...</p></div>';
+    '<div class="empty"><div class="empty-icon">⏳</div><h3>กำลังโหลด...</h3></div>';
 
   try {
     const res  = await fetch(`${ACTIVITY}${endpoint}?${params}`, {
@@ -547,74 +557,71 @@ async function loadActivities() {
     const acts = data.activities || [];
     renderStats(acts);
     renderTimeline(acts);
-    document.getElementById('refresh-time').textContent =
-      `อัปเดต ${new Date().toLocaleTimeString('th-TH')} · ${acts.length}/${data.total} รายการ`;
-  } catch (e) {
+    document.getElementById('refresh-meta').textContent =
+      `อัปเดต ${new Date().toLocaleTimeString('th-TH')}  ·  ${acts.length}/${data.total} รายการ`;
+  } catch {
     renderEmpty('ไม่สามารถเชื่อมต่อ activity-service ได้');
   }
 }
 
 function renderStats(acts) {
   document.getElementById('stat-total').textContent  = acts.length;
-  document.getElementById('stat-reg').textContent    = acts.filter(a => a.event_type === 'USER_REGISTERED').length;
-  document.getElementById('stat-login').textContent  = acts.filter(a => a.event_type === 'USER_LOGIN').length;
-  document.getElementById('stat-tasks').textContent  = acts.filter(a => a.event_type === 'TASK_CREATED').length;
-  document.getElementById('stat-status').textContent = acts.filter(a => a.event_type === 'TASK_STATUS_CHANGED').length;
+  document.getElementById('stat-reg').textContent    = acts.filter(a => a.event_type==='USER_REGISTERED').length;
+  document.getElementById('stat-login').textContent  = acts.filter(a => a.event_type==='USER_LOGIN').length;
+  document.getElementById('stat-tasks').textContent  = acts.filter(a => a.event_type==='TASK_CREATED').length;
+  document.getElementById('stat-status').textContent = acts.filter(a => a.event_type==='TASK_STATUS_CHANGED').length;
 }
 
-function renderTimeline(activities) {
+function renderTimeline(acts) {
   const wrap = document.getElementById('timeline-wrap');
-  if (!activities.length) {
-    wrap.innerHTML = '<div class="empty"><div class="icon">📭</div><p>ยังไม่มี activity</p></div>';
+  if (!acts.length) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><h3>ยังไม่มี Activity</h3><p>ลอง login หรือสร้าง task เพื่อสร้าง event แรก</p></div>';
     return;
   }
-  wrap.innerHTML = '<div class="timeline-wrap" id="tl-inner"></div>';
-  const inner = document.getElementById('tl-inner');
-  inner.innerHTML = activities.map(a => {
-    const badge  = BADGE_MAP[a.event_type] || 'LOGIN';
-    const icon   = ICON_MAP[a.event_type]  || '•';
-    const time   = new Date(a.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'medium' });
-    const metas  = a.meta
+  wrap.innerHTML = `<div class="timeline">${acts.map((a, i) => {
+    const badge = BADGE[a.event_type] || 'LOGIN';
+    const icon  = ICON[a.event_type]  || '•';
+    const time  = new Date(a.created_at).toLocaleString('th-TH', { dateStyle:'short', timeStyle:'medium' });
+    const metas = a.meta
       ? Object.entries(a.meta).map(([k,v]) => `<span class="meta-chip">${escHtml(k)}: ${escHtml(String(v))}</span>`).join('')
       : '';
     return `
-      <div class="activity-item">
-        <div class="activity-dot dot-${badge}">${icon}</div>
+      <div class="activity-row" style="animation-delay:${i * 0.04}s">
+        <div class="timeline-dot dot-${badge}">${icon}</div>
         <div class="activity-card">
-          <div class="activity-card-header">
+          <div class="ac-header">
             <span class="event-badge badge-${badge}">${escHtml(a.event_type)}</span>
-            ${a.username ? `<span class="user-tag">👤 <strong>${escHtml(a.username)}</strong></span>` : ''}
+            ${a.username ? `<span class="ac-user">👤 <strong>${escHtml(a.username)}</strong></span>` : ''}
           </div>
-          <div class="activity-summary">${escHtml(a.summary || '—')}</div>
-          <div class="activity-footer">
-            <span class="activity-time">🕐 ${escHtml(time)}</span>
+          <div class="ac-summary">${escHtml(a.summary || '—')}</div>
+          <div class="ac-footer">
+            <span class="ac-time">🕐 ${escHtml(time)}</span>
             ${metas ? `<div class="meta-chips">${metas}</div>` : ''}
           </div>
         </div>
       </div>`;
-  }).join('');
+  }).join('')}</div>`;
 }
 
 function renderEmpty(msg) {
   document.getElementById('timeline-wrap').innerHTML =
-    `<div class="empty"><div class="icon">⚠️</div><p>${escHtml(msg)}</p></div>`;
+    `<div class="empty"><div class="empty-icon">⚠️</div><h3>เกิดข้อผิดพลาด</h3><p>${escHtml(msg)}</p></div>`;
 }
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 
-// Auto-login if token exists
 if (token) {
   (async () => {
     try {
-      const res  = await fetch(`${AUTH}/api/auth/verify`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.valid) initPage(data.user);
+      const res = await fetch(`${AUTH}/api/auth/verify`, { headers:{'Authorization':`Bearer ${token}`} });
+      const d   = await res.json();
+      if (d.valid) initPage(d.user);
       else { localStorage.removeItem('jwt_token'); token = null; }
-    } catch (_) {}
+    } catch {}
   })();
 }
 </script>
