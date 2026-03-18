@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY src/ ./src/
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+  && chown -R appuser:appgroup /app
 USER appuser
 EXPOSE 3003
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
