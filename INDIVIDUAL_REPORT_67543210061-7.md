@@ -6,36 +6,40 @@
 - กลุ่ม: 2
 
 ## ขอบเขตงานที่รับผิดชอบ
-รับผิดชอบงานทั้งหมดในกลุ่ม ได้แก่ Auth Service, Task Service, Log Service, Frontend, Nginx, Docker Compose และการทดสอบระบบ
+รับผิดชอบงานทั้งหมดในกลุ่ม ได้แก่ Auth Service (Register + logActivity), Task Service (logActivity ทุก CRUD), Activity Service (สร้างใหม่ทั้งหมด), Frontend (index.html + activity.html + config.js), Docker Compose, และการ Deploy ทุก service บน Railway
 
 ## สิ่งที่ได้ดำเนินการด้วยตนเอง
-- เขียน auth-service ครบทุก route ได้แก่ login, verify, me, health พร้อม JWT middleware
-- เขียน task-service ครบทุก CRUD route พร้อม JWT guard และ role-based access
-- เขียน log-service สำหรับรับ internal log events จาก auth และ task service
-- ตั้งค่า Nginx เป็น reverse proxy พร้อม TLS termination และ rate limiting
-- พัฒนา frontend หน้า Task Board และ Log Dashboard
-- เขียน Docker Compose รวมทุก service และ PostgreSQL ให้ทำงานร่วมกัน
-- สร้าง Self-Signed Certificate ผ่าน script gen-certs.sh
-- เขียน db/init.sql สำหรับ schema และ seed users
+- เพิ่ม Register API ใน auth-service พร้อม logActivity() และ logToDB()
+- แก้ไข schema ของ auth-service และ task-service ให้ตรงกับ column ที่ใช้จริง
+- เพิ่ม logActivity() ใน task-service ทุก route ได้แก่ TASK_CREATED, TASK_STATUS_CHANGED, TASK_DELETED
+- สร้าง activity-service ใหม่ทั้งหมด ครบทุก endpoint: /internal, /me, /all, /health
+- พัฒนา frontend เพิ่ม Register tab ใน index.html และสร้าง activity.html ใหม่
+- ตั้งค่า config.js ให้ใช้ Railway URL จริง
+- Deploy auth-service, task-service, activity-service บน Railway พร้อม PostgreSQL plugin แยกกัน 3 ก้อน
+- แก้ไขปัญหา Railway frontend healthcheck failure โดยลบ railway.json ออก
 
 ## ปัญหาที่พบและวิธีการแก้ไข
 
-**ปัญหาที่ 1: Seed users login ไม่ได้**
-เนื่องจาก bcrypt hash ที่ใส่ไว้ใน init.sql ไม่ถูกต้อง ต้อง generate ใหม่ด้วย Node.js แล้วแทนค่าให้ถูกต้องก่อนรัน docker compose
+**ปัญหาที่ 1: Activity แสดง 0 events บน Railway**
+เนื่องจาก `ACTIVITY_SERVICE_URL` ใน auth-service และ task-service ไม่ได้ตั้งค่าบน Railway ทำให้ `logActivity()` ส่ง request ไปที่ Docker hostname `http://activity-service:3003` ซึ่งไม่มีอยู่บน Cloud แก้ไขโดยเพิ่ม environment variable `ACTIVITY_SERVICE_URL=https://hearty-analysis-production.up.railway.app` ใน Railway dashboard ของทั้งสอง service
 
-**ปัญหาที่ 2: JWT_SECRET ไม่ตรงกันระหว่าง services**
-auth-service เซ็น token ด้วย secret ค่าหนึ่ง แต่ task-service ใช้ค่า default ที่ต่างออกไป แก้ไขโดยกำหนด JWT_SECRET ร่วมกันผ่าน .env และ docker-compose.yml
+**ปัญหาที่ 2: Railway frontend healthcheck ล้มเหลวซ้ำหลายครั้ง**
+สาเหตุคือ railway.json มี `startCommand: "nginx -g 'daemon off;'"` ที่ override Dockerfile CMD ทำให้ script ที่เตรียม nginx.conf ไม่ทำงาน และ nginx ไม่มี server block ให้ฟัง แก้ไขโดยลบ railway.json ออกทั้งหมด ให้ Railway ใช้ default process healthcheck แทน
 
 ## สิ่งที่ได้เรียนรู้จากงานนี้
-- เข้าใจหลักการ service separation และการกำหนด boundary ของแต่ละ service
-- เข้าใจ JWT flow ตั้งแต่การออก token ไปจนถึงการ verify ในแต่ละ service
-- เข้าใจการทำ TLS termination ที่ Nginx และการเชื่อมต่อ internal network ด้วย HTTP
-- เข้าใจ trade-off ของ shared database ในระบบ Microservices เบื้องต้น
-- เข้าใจการใช้ Docker Compose จัดการ multi-container application
+- เข้าใจ Database-per-Service Pattern และ trade-off ที่ต้องใช้ Denormalization เก็บ username ไว้ใน activities table
+- เข้าใจ fire-and-forget pattern และทำไมถึงต้องใช้ `.catch(() => {})` เพื่อไม่ให้ service หลักล้มตาม activity-service
+- เข้าใจการ Deploy microservices บน Railway และการตั้งค่า environment variable ระหว่าง services
+- เข้าใจลำดับการ deploy ว่าต้อง deploy activity-service ก่อนแล้วค่อยกลับมาตั้ง ACTIVITY_SERVICE_URL ใน auth และ task service
+- เข้าใจว่า railway.json startCommand override Dockerfile CMD และผลกระทบที่เกิดขึ้น
 
-## แนวทางการพัฒนาต่อไปใน Set 2
-- แยก database เป็น database-per-service (auth-db, task-db, activity-db)
-- เพิ่ม Register API ใน auth-service
-- สร้าง Activity Service ใหม่สำหรับบันทึก user events แทน Log Service
-- ออกแบบ service-to-service call แบบ fire-and-forget ระหว่าง services
-- Deploy ทุก service ขึ้น Railway Cloud พร้อม environment variables ที่ถูกต้อง
+## อธิบาย: Denormalization ใน activities table คืออะไร และทำไมต้องทำ
+ใน Database-per-Service pattern activity-db ไม่มี users table เพราะ users อยู่ใน auth-db ถ้าต้องการแสดง username ใน activity timeline จะต้อง query ข้าม 2 databases ซึ่งทำไม่ได้โดยตรง จึงแก้ปัญหาโดยเก็บ `username` ไว้ใน activities table ณ เวลาที่ event เกิดขึ้นเลย เรียกว่า Denormalization ข้อเสียคือถ้า user เปลี่ยน username ในภายหลัง ข้อมูลใน activities จะไม่อัปเดตตาม แต่สำหรับ event log ถือว่ายอมรับได้
+
+## อธิบาย: ทำไม logActivity() ต้องเป็น fire-and-forget
+เพราะ activity tracking เป็น non-critical feature ถ้า logActivity() รอผลลัพธ์จาก activity-service และ activity-service ล่มหรือช้า จะทำให้ auth-service และ task-service ตอบช้าหรือ error ตามไปด้วย ซึ่งกระทบกับการใช้งานหลัก การใช้ `.catch(() => {})` ทำให้ service หลักทำงานต่อได้ทันทีโดยไม่สนใจผลลัพธ์ของ activity log
+
+## แนวทางการพัฒนาต่อไป
+- เพิ่ม authentication บน `/api/activity/internal` เพื่อความปลอดภัยใน production
+- ใช้ message queue เช่น Redis หรือ RabbitMQ แทน HTTP fire-and-forget เพื่อไม่ให้ events สูญหายเมื่อ activity-service ล่ม
+- เพิ่ม pagination ใน activity timeline
