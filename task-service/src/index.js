@@ -39,10 +39,13 @@ async function start() {
       updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS logs (
-      id         SERIAL PRIMARY KEY,
+      id         SERIAL       PRIMARY KEY,
+      level      VARCHAR(10)  NOT NULL CHECK (level IN ('INFO','WARN','ERROR')),
+      event      VARCHAR(100) NOT NULL,
       user_id    INTEGER,
-      action     VARCHAR(100),
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      message    TEXT,
+      meta       JSONB,
+      created_at TIMESTAMP    DEFAULT NOW()
     );
   `);
   console.log('[task-service] Tables ready');
