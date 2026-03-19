@@ -1,114 +1,45 @@
-# รายงานบุคคล — ENGSE207 Final Lab Set 1
+# INDIVIDUAL_REPORT_67543210061-7.md
 
-**รายวิชา:** ENGSE207 — หลักการวิศวกรรมซอฟต์แวร์
-**รหัสนักศึกษา:** 67543210061-7
-**ชื่อ-สกุล:** นายพิชฌ์ สินธรสวัสดิ์
-**ลักษณะงาน:** ทำคนเดียว (Solo)
+## ข้อมูลผู้จัดทำ
+- ชื่อ-นามสกุล: นายพิชฌ์ สินธรสวัสดิ์
+- รหัสนักศึกษา: 67543210061-7
+- กลุ่ม: 2
 
----
+## ขอบเขตงานที่รับผิดชอบ
+รับผิดชอบงานทั้งหมดในกลุ่ม ได้แก่ Auth Service (Register + logActivity), Task Service (logActivity ทุก CRUD), Activity Service (สร้างใหม่ทั้งหมด), Frontend (index.html + activity.html + config.js), Docker Compose, และการ Deploy ทุก service บน Railway
 
-## 1. สรุปสิ่งที่ทำในโปรเจกต์นี้
+## สิ่งที่ได้ดำเนินการด้วยตนเอง
+- เพิ่ม Register API ใน auth-service พร้อม logActivity() และ logToDB()
+- แก้ไข schema ของ auth-service และ task-service ให้ตรงกับ column ที่ใช้จริง
+- เพิ่ม logActivity() ใน task-service ทุก route ได้แก่ TASK_CREATED, TASK_STATUS_CHANGED, TASK_DELETED
+- สร้าง activity-service ใหม่ทั้งหมด ครบทุก endpoint: /internal, /me, /all, /health
+- พัฒนา frontend เพิ่ม Register tab ใน index.html และสร้าง activity.html ใหม่
+- ตั้งค่า config.js ให้ใช้ Railway URL จริง
+- Deploy auth-service, task-service, activity-service บน Railway พร้อม PostgreSQL plugin แยกกัน 3 ก้อน
+- แก้ไขปัญหา Railway frontend healthcheck failure โดยลบ railway.json ออก
 
-โปรเจกต์นี้ผมพัฒนาทุกส่วนคนเดียวตั้งแต่ต้นจนจบ ตั้งแต่การออกแบบ Schema ฐานข้อมูล การสร้างเซอร์วิสแต่ละตัว การตั้งค่า Nginx ไปจนถึงหน้าเว็บ Frontend ทั้งหมดนี้ทำภายในสภาพแวดล้อม Docker Compose ที่ทุกเซอร์วิสสื่อสารกันผ่าน Docker Network ส่วนตัว
+## ปัญหาที่พบและวิธีการแก้ไข
 
----
+**ปัญหาที่ 1: Activity แสดง 0 events บน Railway**
+เนื่องจาก `ACTIVITY_SERVICE_URL` ใน auth-service และ task-service ไม่ได้ตั้งค่าบน Railway ทำให้ `logActivity()` ส่ง request ไปที่ Docker hostname `http://activity-service:3003` ซึ่งไม่มีอยู่บน Cloud แก้ไขโดยเพิ่ม environment variable `ACTIVITY_SERVICE_URL=https://hearty-analysis-production.up.railway.app` ใน Railway dashboard ของทั้งสอง service
 
-## 2. งานที่ทำในแต่ละส่วน
+**ปัญหาที่ 2: Railway frontend healthcheck ล้มเหลวซ้ำหลายครั้ง**
+สาเหตุคือ railway.json มี `startCommand: "nginx -g 'daemon off;'"` ที่ override Dockerfile CMD ทำให้ script ที่เตรียม nginx.conf ไม่ทำงาน และ nginx ไม่มี server block ให้ฟัง แก้ไขโดยลบ railway.json ออกทั้งหมด ให้ Railway ใช้ default process healthcheck แทน
 
-### 2.1 โครงสร้างพื้นฐาน (Infrastructure)
+## สิ่งที่ได้เรียนรู้จากงานนี้
+- เข้าใจ Database-per-Service Pattern และ trade-off ที่ต้องใช้ Denormalization เก็บ username ไว้ใน activities table
+- เข้าใจ fire-and-forget pattern และทำไมถึงต้องใช้ `.catch(() => {})` เพื่อไม่ให้ service หลักล้มตาม activity-service
+- เข้าใจการ Deploy microservices บน Railway และการตั้งค่า environment variable ระหว่าง services
+- เข้าใจลำดับการ deploy ว่าต้อง deploy activity-service ก่อนแล้วค่อยกลับมาตั้ง ACTIVITY_SERVICE_URL ใน auth และ task service
+- เข้าใจว่า railway.json startCommand override Dockerfile CMD และผลกระทบที่เกิดขึ้น
 
-- ตั้งค่า `docker-compose.yml` ให้ครอบคลุมทุกเซอร์วิส (postgres, auth, task, log, frontend, nginx) พร้อม health check และ depends_on
-- ออกแบบ Docker Network ภายใน (`app-network`) เพื่อให้เซอร์วิสคุยกันโดยไม่ต้องเปิด Port ออกข้างนอก
-- สร้างไฟล์ `.env.example` และ `.gitignore` เพื่อไม่ให้ข้อมูลสำคัญหลุดขึ้น Git
+## อธิบาย: Denormalization ใน activities table คืออะไร และทำไมต้องทำ
+ใน Database-per-Service pattern activity-db ไม่มี users table เพราะ users อยู่ใน auth-db ถ้าต้องการแสดง username ใน activity timeline จะต้อง query ข้าม 2 databases ซึ่งทำไม่ได้โดยตรง จึงแก้ปัญหาโดยเก็บ `username` ไว้ใน activities table ณ เวลาที่ event เกิดขึ้นเลย เรียกว่า Denormalization ข้อเสียคือถ้า user เปลี่ยน username ในภายหลัง ข้อมูลใน activities จะไม่อัปเดตตาม แต่สำหรับ event log ถือว่ายอมรับได้
 
-### 2.2 Nginx (HTTPS + Reverse Proxy)
+## อธิบาย: ทำไม logActivity() ต้องเป็น fire-and-forget
+เพราะ activity tracking เป็น non-critical feature ถ้า logActivity() รอผลลัพธ์จาก activity-service และ activity-service ล่มหรือช้า จะทำให้ auth-service และ task-service ตอบช้าหรือ error ตามไปด้วย ซึ่งกระทบกับการใช้งานหลัก การใช้ `.catch(() => {})` ทำให้ service หลักทำงานต่อได้ทันทีโดยไม่สนใจผลลัพธ์ของ activity log
 
-- ตั้งค่า `nginx.conf` ให้รับ HTTPS บนพอร์ต 443 และ Redirect HTTP → HTTPS อัตโนมัติ
-- เพิ่ม Rate Limiting แยกกัน 2 ชุด คือ `login_limit` (5 req/min) สำหรับ Endpoint ล็อกอิน และ `api_limit` (30 req/min) สำหรับ API ทั่วไป
-- บล็อก `/api/logs/internal` ไม่ให้เรียกจากภายนอกได้ ทำให้ Endpoint นี้เข้าถึงได้เฉพาะจากภายใน Docker Network
-- เขียน `scripts/gen-certs.sh` สำหรับสร้างใบรับรอง Self-Signed ด้วย OpenSSL
-
-### 2.3 auth-service
-
-- เขียน Express.js API สำหรับจัดการการยืนยันตัวตน
-- ใช้ `bcryptjs` ตรวจสอบรหัสผ่านกับ Hash ที่เก็บในฐานข้อมูล โดยมีการใส่ Dummy Hash เพื่อป้องกัน Timing Attack กรณีที่ Username ไม่มีในระบบ
-- ออก JWT ด้วย `jsonwebtoken` และสร้าง Middleware `verifyToken` ที่ใช้ร่วมกับเซอร์วิสอื่น
-- ทุก Endpoint ที่สำคัญจะส่ง Log Event ไปยัง log-service โดยอัตโนมัติ
-
-### 2.4 task-service
-
-- เขียน CRUD API ครบถ้วนสำหรับจัดการ Task (สร้าง / อ่าน / แก้ไข / ลบ)
-- นำ JWT Middleware มาใช้ตรวจสอบสิทธิ์ก่อนเข้าถึงทุก Endpoint
-- ออกแบบ Role-Based Access Control ให้ Admin เห็น Task ทั้งหมด ส่วน Member เห็นเฉพาะ Task ที่ตัวเองรับผิดชอบ
-- ทุกการกระทำที่เปลี่ยนแปลงข้อมูล (สร้าง / แก้ไข / ลบ) จะส่ง Log Event ไปบันทึกที่ log-service
-
-### 2.5 log-service
-
-- สร้าง Endpoint ภายใน `POST /api/logs/internal` สำหรับรับ Log จากเซอร์วิสอื่น
-- สร้าง `GET /api/logs` สำหรับ Admin ดึงรายการ Log พร้อม Filter ตาม Service และ Action
-- สร้าง `GET /api/logs/stats` แสดงสถิติสรุปเช่น จำนวน Log ต่อ Service และ Action ที่เกิดขึ้นบ่อยที่สุด
-
-### 2.6 ฐานข้อมูล (PostgreSQL)
-
-- ออกแบบ Schema 3 ตาราง คือ `users`, `tasks`, `logs` ให้รองรับการทำงานร่วมกันของทุกเซอร์วิส
-- เขียน `db/init.sql` สำหรับสร้างตารางและ Insert ข้อมูล Seed
-- สร้าง bcrypt Hash สำหรับรหัสผ่านของ alice, bob และ admin โดยใช้ Python แทน npm เนื่องจากสภาพแวดล้อมของแล็บจำกัดการติดตั้งแพ็กเกจ
-- เพิ่ม Index บนตาราง `logs` เพื่อเพิ่มประสิทธิภาพการ Query
-
-### 2.7 Frontend
-
-- **index.html (Task Board):** ฟอร์มล็อกอิน, ตารางแสดง Task, ปุ่มสร้าง / แก้ไข / ลบ Task, แสดงข้อมูล JWT แบบ Decoded, ลิงก์ไปยัง Log Dashboard
-- **logs.html (Log Dashboard):** แสดงรายการ Log แบบ Real-Time พร้อมปุ่มรีเฟรชอัตโนมัติ, ช่องกรอง Filter, Card แสดงสรุปสถิติ — เข้าถึงได้เฉพาะผู้ใช้ที่มีบทบาท Admin
-
----
-
-## 3. ความท้าทายและการแก้ปัญหา
-
-### ปัญหาที่ 1: npm install ถูกบล็อก
-
-ในสภาพแวดล้อมของแล็บไม่สามารถรัน `npm install bcrypt` ได้เนื่องจาก Security Policy ของระบบ แก้ไขโดยใช้ Python Library `bcrypt` สร้าง Hash ล่วงหน้าแล้วนำไปใส่ใน `init.sql` โดยตรง ทำให้ไม่จำเป็นต้อง Install แพ็กเกจเพิ่มเติมในตอน Build
-
-### ปัญหาที่ 2: Nginx บล็อก Endpoint ภายใน
-
-ต้องการให้ `/api/logs/internal` เรียกได้เฉพาะภายใน Docker Network เท่านั้น แก้ไขโดยใช้ `deny all` ใน `nginx.conf` สำหรับ Location นี้ ทำให้ Request จากภายนอกทั้งหมดได้รับ 403 ทันที แต่เซอร์วิสภายในยังคุยกันได้โดยตรงผ่าน Docker Network
-
-### ปัญหาที่ 3: JWT ที่ใช้ร่วมกันระหว่างเซอร์วิส
-
-Task Service และ Log Service ต้องตรวจสอบ Token ที่ Auth Service ออกให้ แก้ไขโดยใช้ `JWT_SECRET` ตัวเดียวกันจาก Environment Variable ทำให้ทุกเซอร์วิสสามารถ Verify Token ได้โดยไม่ต้องเรียก Auth Service ทุกครั้ง ลด Latency และจุดล้มเหลว
-
----
-
-## 4. สิ่งที่ได้เรียนรู้
-
-- **Microservices Communication:** เข้าใจว่าเซอร์วิสหลาย ๆ ตัวสื่อสารกันอย่างไรผ่าน REST API ภายใน Docker Network และข้อดีของการแยกเซอร์วิสออกจากกันในแง่ของการ Scale และการดูแลรักษา
-
-- **TLS และ HTTPS:** เข้าใจกระบวนการสร้างใบรับรอง Self-Signed ด้วย OpenSSL และวิธีที่ Nginx ทำ TLS Termination ก่อนส่ง Request ไปยัง Backend
-
-- **JWT Authentication Flow:** เข้าใจ Flow ตั้งแต่การออก Token จนถึงการ Verify และการใช้งานร่วมกันระหว่างหลายเซอร์วิสผ่าน Shared Secret
-
-- **Rate Limiting ด้วย Nginx:** เรียนรู้การตั้งค่า `limit_req_zone` และ `limit_req` เพื่อป้องกัน Brute-Force และการโจมตีแบบ DDoS เบื้องต้น
-
-- **Docker Compose Multi-Service:** เข้าใจการจัดการ Health Check, Dependency Order (`depends_on`), Volume, และ Network ใน Docker Compose สำหรับโปรเจกต์ที่มีหลายเซอร์วิส
-
-- **Role-Based Access Control:** เข้าใจการออกแบบ RBAC เบื้องต้น โดยฝังบทบาทของผู้ใช้ไว้ใน JWT Payload แล้วตรวจสอบที่ Middleware ของแต่ละเซอร์วิส
-
----
-
-## 5. การแบ่งงาน
-
-เนื่องจากเป็นโปรเจกต์เดี่ยว ผมรับผิดชอบทุกส่วนด้วยตัวเองทั้งหมด:
-
-| ส่วนงาน | ผู้รับผิดชอบ | สัดส่วน |
-|---|---|---|
-| Infrastructure & Docker Compose | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-| Nginx (HTTPS, Rate Limit, Proxy) | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-| auth-service | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-| task-service | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-| log-service | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-| Database Schema & Seed Data | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-| Frontend (Task Board + Log Dashboard) | นายพิชฌ์ สินธรสวัสดิ์ | 100% |
-
----
-
-*รายงานนี้เป็นส่วนหนึ่งของ ENGSE207 Final Lab Set 1*
-*รหัสนักศึกษา 67543210061-7 — นายพิชฌ์ สินธรสวัสดิ์*
+## แนวทางการพัฒนาต่อไป
+- เพิ่ม authentication บน `/api/activity/internal` เพื่อความปลอดภัยใน production
+- ใช้ message queue เช่น Redis หรือ RabbitMQ แทน HTTP fire-and-forget เพื่อไม่ให้ events สูญหายเมื่อ activity-service ล่ม
+- เพิ่ม pagination ใน activity timeline

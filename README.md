@@ -1,211 +1,333 @@
-# ENGSE207 Final Lab Set 1
+# ENGSE207 Software Architecture
+## README — Final Lab Set 2: Microservices + Activity Tracking + Cloud (Railway)
 
-## Microservices + HTTPS + Lightweight Logging
-
-**รายวิชา:** ENGSE207 — หลักการวิศวกรรมซอฟต์แวร์
-**รหัสนักศึกษา:** 67543210061-7
-**ชื่อ-สกุล:** นายพิชฌ์ สินธรสวัสดิ์
+> เอกสารฉบับนี้ใช้เป็น `README.md` สำหรับ repository ของ **Final Lab Set 2**
 
 ---
 
-## ภาพรวมโครงการ
+## 1. ข้อมูลรายวิชาและสมาชิก
 
-โปรเจกต์นี้เป็นเว็บแอปพลิเคชันที่ใช้สถาปัตยกรรมแบบ Microservices ทำงานในคอนเทนเนอร์ Docker มีการรักษาความปลอดภัยด้วย HTTPS และมีระบบ Logging ภายในแบบเบาที่สร้างขึ้นเอง ผมพัฒนาทุกส่วนด้วยตัวเองตั้งแต่ต้น เป้าหมายหลักคือทำความเข้าใจว่าบริการต่าง ๆ สื่อสารกันอย่างไร จะป้องกันระบบด้วย TLS และ JWT ได้อย่างไร และจะติดตามสิ่งที่เกิดขึ้นภายในระบบได้อย่างไรโดยไม่ต้องพึ่งไลบรารี Logging ขนาดใหญ่
+**รายวิชา:** ENGSE207 Software Architecture
+**ชื่องาน:** Final Lab — ชุดที่ 2: Microservices + Activity Tracking + Cloud (Railway)
 
-ทั้งหมด 6 เซอร์วิสทำงานในคอนเทนเนอร์ Docker และสื่อสารกันผ่าน Docker Network ส่วนตัว โดยมี Nginx Reverse Proxy ทำหน้าที่เป็นจุดรับ-ส่งข้อมูลที่ขอบระบบ จัดการ TLS, บังคับใช้ Rate Limit และส่งต่อ Request ไปยังเซอร์วิสที่เหมาะสม
+**สมาชิกในกลุ่ม**
+- นายพิชฌ์ สินธรสวัสดิ์ / 67543210061-7
+- ........................................
 
----
+**กลุ่มที่:** 2
 
-## สถาปัตยกรรมระบบ
-
-```
-เบราว์เซอร์ (HTTPS :443)
-       │
- ┌─────▼────────────────────────────────────────────┐
- │  Nginx  (TLS · Rate-Limit · Reverse Proxy)        │
- └───┬──────────────┬──────────────┬────────────────┘
-     │              │              │
- auth-service   task-service   log-service
-   :3001           :3002          :3003
-     └──────────────┴──────────────┘
-                    │
-            PostgreSQL :5432
-```
-
-- **Nginx** เป็นเซอร์วิสเดียวที่เปิดรับการเชื่อมต่อจากภายนอก
-- **auth-service**, **task-service** และ **log-service** อยู่บน `app-network` ภายในเท่านั้น
-- Endpoint สำหรับเขียน Log ภายใน (`/api/logs/internal`) ถูกบล็อกที่ระดับ Nginx — เซอร์วิสภายใน Docker Network เท่านั้นที่เรียกใช้ได้
-- ฐานข้อมูล PostgreSQL หนึ่งชุดถูกใช้ร่วมกันโดยทั้งสามเซอร์วิส Backend
+**Repository:** `final-lab-set2/`
 
 ---
 
-## เซอร์วิสต่าง ๆ
+## 2. ภาพรวมของระบบ
 
-### auth-service (พอร์ต 3001)
+Final Lab ชุดที่ 2 ต่อยอดจาก Set 1 โดยเพิ่มระบบ Activity Tracking และ Deploy ขึ้น Railway Cloud โดยเน้นหัวข้อสำคัญดังนี้
 
-จัดการการล็อกอินและออก Token เมื่อล็อกอินสำเร็จจะตรวจสอบรหัสผ่านกับ bcrypt hash ที่เก็บในฐานข้อมูล แล้วส่งคืน JWT ที่เซ็นชื่อแล้ว เซอร์วิสอื่น ๆ เรียก `/api/auth/verify` เพื่อตรวจสอบ Token โดยไม่ต้องเข้าถึงฐานข้อมูลโดยตรง
-
-| Endpoint | Method | คำอธิบาย |
-|---|---|---|
-| `/api/auth/login` | POST | ล็อกอิน รับ JWT กลับมา |
-| `/api/auth/verify` | GET | ตรวจสอบความถูกต้องของ Token |
-| `/api/auth/me` | GET | ดึงข้อมูลผู้ใช้งานปัจจุบัน |
-| `/api/auth/health` | GET | ตรวจสอบสถานะเซอร์วิส |
-
-### task-service (พอร์ต 3002)
-
-REST API สำหรับจัดการ Task ที่ป้องกันด้วย JWT ผู้ใช้ที่มีบทบาท Admin สามารถสร้าง แก้ไข และลบ Task ได้ ส่วนผู้ใช้ทั่วไป (Member) ดูได้อย่างเดียว ทุกการกระทำที่เปลี่ยนแปลงข้อมูลจะส่ง Log Event ไปยัง log-service
-
-| Endpoint | Method | คำอธิบาย |
-|---|---|---|
-| `/api/tasks` | GET | ดึงรายการ Task ทั้งหมด |
-| `/api/tasks` | POST | สร้าง Task ใหม่ (Admin เท่านั้น) |
-| `/api/tasks/:id` | PUT | แก้ไข Task (Admin เท่านั้น) |
-| `/api/tasks/:id` | DELETE | ลบ Task (Admin เท่านั้น) |
-
-### log-service (พอร์ต 3003)
-
-ระบบ Logging ภายในแบบเบา auth-service และ task-service ส่ง Event แบบ Structured มาบันทึก Admin สามารถดู Log และสถิติผ่าน Log Dashboard ได้
-
-| Endpoint | Method | คำอธิบาย |
-|---|---|---|
-| `/api/logs/internal` | POST | บันทึก Log (ภายในเท่านั้น) |
-| `/api/logs` | GET | ดึงรายการ Log (Admin) |
-| `/api/logs/stats` | GET | ดูสถิติสรุป (Admin) |
-| `/api/logs/health` | GET | ตรวจสอบสถานะเซอร์วิส |
-
-### Nginx
-
-จุดเข้าถึงระบบเพียงจุดเดียว รองรับ:
-- ใบรับรอง TLS แบบ Self-Signed (HTTPS บนพอร์ต 443)
-- Redirect HTTP → HTTPS อัตโนมัติ
-- Rate Limiting: `5 req/min` สำหรับ Login และ `30 req/min` สำหรับ API ทั่วไป
-- บล็อก `/api/logs/internal` จากภายนอกอย่างถาวร
-
-### Frontend
-
-หน้าเว็บ HTML แบบ Static 2 หน้า ให้บริการโดยคอนเทนเนอร์ Nginx แยก:
-- **index.html** — Task Board: ฟอร์มล็อกอิน, จัดการ Task, ดูข้อมูล JWT, ลิงก์ไป Log Dashboard
-- **logs.html** — Log Dashboard: สำหรับ Admin เท่านั้น, รีเฟรชอัตโนมัติ, แถบกรองข้อมูล, สรุปสถิติ
-
-### PostgreSQL
-
-ฐานข้อมูลร่วมหนึ่งชุด (`engse207_db`) ประกอบด้วย 3 ตาราง:
-
-```sql
-users  -- id, username, password_hash, role (admin | member)
-tasks  -- id, title, description, status, assigned_to, created_by, timestamps
-logs   -- id, service, action, user_id, details, created_at
-```
-
-ข้อมูล Seed ถูก Insert ตอน Startup ผ่าน `db/init.sql` รหัสผ่านเก็บเป็น bcrypt hash (สร้างด้วย Python เนื่องจากสภาพแวดล้อมของแล็บจำกัดการใช้ npm install)
+- เพิ่ม Register API ใน Auth Service
+- สร้าง Activity Service สำหรับบันทึก user events ทุกอย่างในระบบ
+- ออกแบบ service-to-service call แบบ fire-and-forget
+- ใช้ Database-per-Service pattern (auth-db, task-db, activity-db แยกกัน)
+- Deploy ทุก service บน Railway Cloud พร้อม HTTPS อัตโนมัติ
 
 ---
 
-## วิธีรันโปรเจกต์
+## 3. วัตถุประสงค์ของงาน
 
-### สิ่งที่ต้องมีก่อน
-- Docker Desktop (หรือ Docker Engine + Compose Plugin)
-- OpenSSL (สำหรับสคริปต์สร้างใบรับรอง)
-- Git
+งานนี้มีจุดมุ่งหมายเพื่อฝึกให้นักศึกษาสามารถ
 
-### ขั้นตอนที่ 1 — สร้างใบรับรอง TLS
-
-```bash
-bash scripts/gen-certs.sh
-```
-
-คำสั่งนี้จะสร้างใบรับรอง Self-Signed ไว้ใน `nginx/certs/`
-
-### ขั้นตอนที่ 2 — ตั้งค่า Environment Variables
-
-```bash
-cp .env.example .env
-# แก้ไขไฟล์ .env — ตั้ง POSTGRES_PASSWORD และ JWT_SECRET ให้มีความปลอดภัยเพียงพอ
-```
-
-### ขั้นตอนที่ 3 — เริ่มต้นทุกเซอร์วิส
-
-```bash
-docker compose up --build -d
-```
-
-เปิดเบราว์เซอร์ไปที่ **https://localhost** แล้วกด Accept เพื่อยอมรับคำเตือนใบรับรอง Self-Signed
-
-### บัญชีทดสอบเริ่มต้น
-
-| Username | Password  | บทบาท  |
-|----------|-----------|--------|
-| alice    | alice123  | member |
-| bob      | bob456    | member |
-| admin    | adminpass | admin  |
-
-### หยุดการทำงานของเซอร์วิส
-
-```bash
-docker compose down
-# หากต้องการลบ Database Volume ด้วย:
-docker compose down -v
-```
+- ออกแบบ Database-per-Service Pattern ได้
+- ขยายระบบโดยเพิ่ม Register API และ Activity Service
+- ออกแบบ service-to-service call แบบ fire-and-forget
+- อธิบาย Denormalization และเหตุผลที่ใช้ใน Microservices
+- Deploy 3 services และ 3 databases บน Railway ได้
 
 ---
 
-## โครงสร้างโปรเจกต์
+## 4. Architecture Overview
 
+```text
+Browser / Postman
+        │
+        │ HTTPS (Railway จัดการให้อัตโนมัติ)
+        ▼
+┌───────────────────────────────────────────────────────┐
+│                   Railway Project                     │
+│                                                       │
+│  Auth Service        Task Service     Activity Svc    │
+│  auth-xxx.railway    task-xxx.railway activity-xxx…   │
+│       │                   │                  ▲        │
+│       └───────────────────┴──────────────────┘        │
+│       │  POST /api/activity/internal (fire-and-forget)│
+│       ▼                   ▼                  ▼        │
+│   auth-db             task-db          activity-db    │
+│  [PostgreSQL]        [PostgreSQL]      [PostgreSQL]   │
+└───────────────────────────────────────────────────────┘
+
+Frontend เรียกแต่ละ service โดยตรงผ่าน config.js
 ```
-engse207-final-lab/
+
+### Services ที่ใช้ในระบบ
+- **auth-service** — Register, Login, Verify, Me
+- **task-service** — CRUD Tasks พร้อม JWT guard
+- **activity-service** — รับ events จาก services อื่น, ดู activity timeline
+- **auth-db / task-db / activity-db** — PostgreSQL แยกกันต่อ service
+- **frontend** — Task Board (index.html) + Activity Timeline (activity.html)
+
+---
+
+## 5. Cloud URLs (Railway)
+
+| Service | URL |
+|---|---|
+| auth-service | `https://auth-service-production-2dcf.up.railway.app` |
+| task-service | `https://task-service-production-0c06.up.railway.app` |
+| activity-service | `https://hearty-analysis-production.up.railway.app` |
+
+---
+
+## 6. โครงสร้าง Repository
+
+```text
+final-lab-set2/
+├── README.md
+├── TEAM_SPLIT.md
+├── INDIVIDUAL_REPORT_67543210061-7.md
 ├── docker-compose.yml
 ├── .env.example
-├── .gitignore
-├── db/
-│   └── init.sql               # Schema และ Seed Data
-├── nginx/
-│   ├── nginx.conf             # ตั้งค่า Proxy, TLS, Rate-Limit
-│   └── Dockerfile
-├── scripts/
-│   └── gen-certs.sh           # สคริปต์สร้างใบรับรอง Self-Signed
 ├── auth-service/
-│   ├── src/
-│   │   ├── index.js
-│   │   ├── db/db.js
-│   │   ├── middleware/jwtUtils.js
-│   │   └── routes/auth.js
+│   ├── Dockerfile
 │   ├── package.json
+│   ├── init.sql
+│   └── src/
+├── task-service/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── init.sql
+│   └── src/
+├── activity-service/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── init.sql
+│   └── src/
+├── frontend/
+│   ├── index.html
+│   ├── activity.html
+│   ├── config.js
 │   └── Dockerfile
-├── task-service/              # โครงสร้างเหมือน auth-service
-├── log-service/               # โครงสร้างเหมือน auth-service
-└── frontend/
-    ├── index.html             # Task Board UI
-    ├── logs.html              # Log Dashboard UI
-    └── Dockerfile
+└── screenshots/
 ```
 
 ---
 
-## Environment Variables
+## 6. เทคโนโลยีที่ใช้
 
-คัดลอก `.env.example` เป็น `.env` แล้วใส่ค่าของตัวเอง:
+- Node.js / Express.js
+- PostgreSQL (Database-per-Service)
+- Docker / Docker Compose
+- HTML / CSS / JavaScript
+- JWT
+- bcryptjs
+- Railway (Cloud Deployment)
+
+---
+
+## 7. การตั้งค่าและการรันระบบ (Local)
+
+### 7.1 สร้างไฟล์ `.env`
 
 ```env
-POSTGRES_DB=engse207_db
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=<รหัสผ่านของคุณ>
-JWT_SECRET=<คีย์ลับของคุณ>
-JWT_EXPIRES=1h
+JWT_SECRET=engse207-sec2-shared-secret-change-this
+```
+
+### 7.2 รันระบบ Local
+
+```bash
+docker compose up --build
+```
+
+### 7.3 ทดสอบ Local
+
+```bash
+# Register
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@sec2.local","password":"123456"}'
+
+# Login
+TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@sec2.local","password":"123456"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+# ตรวจสอบ Activity
+curl http://localhost:3003/api/activity/me \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
 
-## หมายเหตุด้านความปลอดภัย
+## 8. Seed Users สำหรับทดสอบ
 
-- **TLS** — การรับส่งข้อมูลทั้งหมดเข้ารหัสด้วย TLS ใบรับรองที่ใช้เป็นแบบ Self-Signed เหมาะสำหรับสภาพแวดล้อม Lab แต่หากใช้งานจริงควรใช้ใบรับรองจาก CA ที่น่าเชื่อถือ
-- **รหัสผ่าน** — เก็บเป็น bcrypt hash ไม่มีการเขียนรหัสผ่าน Plain-Text ลงในฐานข้อมูล
-- **JWT** — Token เซ็นด้วย HS256 และมีอายุการใช้งานตามที่กำหนดใน `JWT_EXPIRES`
-- **ป้องกัน Endpoint ภายใน** — `/api/logs/internal` ถูกบล็อกที่ระดับ Nginx เข้าถึงได้เฉพาะภายใน Docker Network เท่านั้น
-- **Rate Limiting** — ป้องกันการโจมตีแบบ Brute-Force บน Endpoint ล็อกอิน (5 req/min)
+| Username | Email | Password | Role |
+|---|---|---|---|
+| alice | alice@lab.local | alice123 | member |
+| admin | admin@lab.local | adminpass | admin |
 
 ---
 
-## หมายเหตุ
+## 9. API Summary
 
-ผมพัฒนาโปรเจกต์นี้คนเดียวทั้งหมด ทุกไฟล์ — เซอร์วิส, ไฟล์คอนฟิก, SQL, และ Frontend — เขียนขึ้นเองตั้งแต่ต้น บางส่วนเช่นการสร้าง bcrypt Hash ต้องใช้ Python แทน npm เนื่องจากสภาพแวดล้อมของแล็บจำกัดการติดตั้งแพ็กเกจผ่าน npm
+### Auth Service
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/verify`
+- `GET /api/auth/me`
+- `GET /api/auth/health`
+
+### Task Service
+- `GET /api/tasks/health`
+- `GET /api/tasks/`
+- `POST /api/tasks/`
+- `PUT /api/tasks/:id`
+- `DELETE /api/tasks/:id`
+
+### Activity Service
+- `POST /api/activity/internal` (internal only — no JWT)
+- `GET /api/activity/me` (JWT required)
+- `GET /api/activity/all` (admin only)
+- `GET /api/activity/health`
+
+---
+
+## 10. การทดสอบระบบบน Cloud
+
+```bash
+AUTH_URL="https://auth-service-production-2dcf.up.railway.app"
+TASK_URL="https://task-service-production-0c06.up.railway.app"
+ACTIVITY_URL="https://hearty-analysis-production.up.railway.app"
+
+# T2: Register
+curl -X POST $AUTH_URL/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sec2user","email":"sec2@test.com","password":"123456"}'
+
+# T3: Login + save token
+TOKEN=$(curl -s -X POST $AUTH_URL/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"sec2@test.com","password":"123456"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+# T4: Auth Me
+curl $AUTH_URL/api/auth/me -H "Authorization: Bearer $TOKEN"
+
+# T5: ตรวจ USER_REGISTERED + USER_LOGIN
+curl $ACTIVITY_URL/api/activity/me -H "Authorization: Bearer $TOKEN"
+
+# T6: Create Task แล้วตรวจ TASK_CREATED
+curl -X POST $TASK_URL/api/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Cloud activity test","priority":"high"}'
+curl $ACTIVITY_URL/api/activity/me -H "Authorization: Bearer $TOKEN"
+
+# T7: Update Task status แล้วตรวจ TASK_STATUS_CHANGED
+curl -X PUT $TASK_URL/api/tasks/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"DONE"}'
+curl "$ACTIVITY_URL/api/activity/me?event_type=TASK_STATUS_CHANGED" \
+  -H "Authorization: Bearer $TOKEN"
+
+# T8: Get Tasks
+curl $TASK_URL/api/tasks -H "Authorization: Bearer $TOKEN"
+
+# T9: ไม่มี JWT → 401
+curl $TASK_URL/api/tasks
+curl $ACTIVITY_URL/api/activity/me
+
+# T10: member → 403, admin → 200
+ADMIN_TOKEN=$(curl -s -X POST $AUTH_URL/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@lab.local","password":"adminpass"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+curl $ACTIVITY_URL/api/activity/all -H "Authorization: Bearer $TOKEN"        # 403
+curl $ACTIVITY_URL/api/activity/all -H "Authorization: Bearer $ADMIN_TOKEN"  # 200
+```
+
+---
+
+## 11. Screenshots ที่แนบในงาน
+
+โฟลเดอร์ `screenshots/` ของกลุ่มนี้ประกอบด้วยภาพดังต่อไปนี้
+
+- `01_railway_dashboard.png`
+- `02_auth_register_cloud.png`
+- `03_auth_login_cloud.png`
+- `04_auth_me_cloud.png`
+- `05_activity_me_user_events.png`
+- `06_activity_task_created.png`
+- `07_activity_status_changed.png`
+- `08_task_list_cloud.png`
+- `09_protected_401.png`
+- `10_member_activity_all_403.png`
+- `11_admin_activity_all_200.png`
+- `12_readme_architecture.png`
+
+---
+
+## 12. การแบ่งงานของทีม
+
+รายละเอียดการแบ่งงานของสมาชิกอยู่ในไฟล์:
+
+- `TEAM_SPLIT.md`
+
+และรายงานรายบุคคลของสมาชิกแต่ละคนอยู่ในไฟล์:
+
+- `INDIVIDUAL_REPORT_67543210061-7.md`
+
+---
+
+## 13. ปัญหาที่พบและแนวทางแก้ไข
+
+- ปัญหา Activity แสดง 0 events เพราะ `ACTIVITY_SERVICE_URL` ไม่ได้ตั้งค่าบน Railway → แก้ไขโดยเพิ่ม env var ใน Railway dashboard
+- ปัญหา schema ไม่ตรงกันระหว่าง `CREATE TABLE` ใน index.js กับ column ที่ใช้จริง → แก้ไข schema ให้ตรงกัน
+- ปัญหา Railway frontend healthcheck ล้มเหลวเพราะ railway.json มี startCommand override → แก้ไขโดยลบ railway.json ออก
+
+---
+
+## 14. ข้อจำกัดของระบบ
+
+- `/api/activity/internal` ไม่มี JWT protection เหมาะสำหรับ Lab เท่านั้น
+- Database-per-Service ทำให้ไม่สามารถ JOIN ข้าม DB ได้ ต้องใช้ Denormalization
+- fire-and-forget หมายความว่า Activity อาจสูญหายได้ถ้า activity-service ล่ม
+
+---
+
+## 15. อธิบาย Patterns สำคัญ
+
+### Database-per-Service
+แต่ละ service มี database เป็นของตัวเอง auth-service ไม่สามารถเข้าถึง task-db ได้โดยตรง ทำให้ต้อง denormalize ข้อมูล เช่น เก็บ `username` ไว้ใน `activities` table เพื่อแสดงผลได้โดยไม่ต้อง JOIN ข้าม database
+
+### Fire-and-Forget
+`logActivity()` ส่ง HTTP request ไปยัง activity-service โดยใช้ `.catch(() => {})` ต่อท้าย หมายความว่าถ้า activity-service ไม่ตอบ auth-service และ task-service ยังทำงานได้ปกติ เพียงแต่ activity จะไม่ถูกบันทึกชั่วคราว
+
+### Gateway Strategy
+Frontend เรียก URL ของแต่ละ service โดยตรงผ่าน `config.js` (Option A: Direct Call) ไม่มี API Gateway กลาง เหมาะสำหรับระบบขนาดเล็กในสภาพแวดล้อม Lab
+
+---
+
+## 16. ภาคผนวก
+
+### ไฟล์สำคัญใน repository
+- `docker-compose.yml`
+- `auth-service/src/routes/auth.js`
+- `task-service/src/routes/tasks.js`
+- `activity-service/src/index.js`
+- `frontend/index.html`
+- `frontend/activity.html`
+- `frontend/config.js`
+
+---
+
+> เอกสารฉบับนี้เป็น README สำหรับงาน Final Lab Set 2 ของกลุ่ม และจัดทำเพื่อประกอบการส่งงานในรายวิชา ENGSE207 Software Architecture
