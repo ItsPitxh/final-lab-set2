@@ -1,54 +1,37 @@
 # TEAM_SPLIT.md
 
-## Team Members
+## ข้อมูลกลุ่ม
+- กลุ่มที่: 2
+- รายวิชา: ENGSE207 Software Architecture
 
-| Student ID | Name |
-|---|---|
-| 67543210061-7 | นายพิชฌ์ สินธรสวัสดิ์ |
+## รายชื่อสมาชิก
+- 67543210061-7 นายพิชฌ์ สินธรสวัสดิ์
+- ........................................
 
-> Solo project — all work done by one student.
+## การแบ่งงานหลัก
 
----
+### สมาชิกคนที่ 1: นายพิชฌ์ สินธรสวัสดิ์
+รับผิดชอบงานหลักดังต่อไปนี้
+- Auth Service: login, verify, me, health routes พร้อม JWT middleware
+- Task Service: CRUD routes ทั้งหมด พร้อม role-based access control
+- Log Service: รับ internal log events จาก auth และ task service
+- Nginx: reverse proxy configuration, TLS termination, rate limiting
+- Frontend: Task Board (index.html) และ Log Dashboard (logs.html)
+- Docker Compose: ตั้งค่า multi-container environment ครบทุก service
+- db/init.sql: schema และ seed users
+- scripts/gen-certs.sh: Self-Signed Certificate
 
-## Work Allocation
+### สมาชิกคนที่ 2: ........................................
+รับผิดชอบงานหลักดังต่อไปนี้
+- ........................................
 
-### นายพิชฌ์ สินธรสวัสดิ์ — All sections
+## งานที่ดำเนินการร่วมกัน
+- ออกแบบ architecture diagram
+- ทดสอบระบบแบบ end-to-end
+- จัดทำ README และ screenshots
 
-**Infrastructure**
-- Nginx HTTPS config, rate limiting, reverse proxy
-- Self-signed certificate setup
-- Docker Compose configuration
+## เหตุผลในการแบ่งงาน
+แบ่งงานตาม service boundary และความรับผิดชอบด้าน integration เพื่อให้แต่ละคนเข้าใจการทำงานของ service ที่ตนรับผิดชอบอย่างลึกซึ้ง
 
-**Auth Service**
-- Login with bcrypt password verification
-- Timing-safe dummy hash for missing users
-- JWT generation and verification
-- `/login`, `/verify`, `/me`, `/health` endpoints
-
-**Task Service**
-- Full CRUD for tasks
-- JWT middleware
-- Role-based access (admin sees all, member sees own)
-- Log events on create/update/delete
-
-**Log Service**
-- Internal endpoint for receiving logs from other services
-- Admin-only `GET /api/logs/` and `/api/logs/stats`
-
-**Database**
-- Schema design for users, tasks, logs
-- bcrypt hash generation for seed users
-- Indexes for log query performance
-
-**Frontend**
-- Task Board UI (`index.html`)
-- Log Dashboard (`logs.html`) — admin only, auto-refresh
-
----
-
-## Integration Notes
-
-- Auth Service issues JWTs that Task Service and Log Service both verify using the same `JWT_SECRET`
-- Task Service and Auth Service send logs to Log Service via `http://log-service:3003/api/logs/internal` — only reachable inside Docker network
-- Nginx is the single entry point — no service exposes ports directly
-- Frontend uses relative URLs so Nginx handles all routing
+## สรุปการเชื่อมโยงงานของสมาชิก
+งานของสมาชิกทุกคนเชื่อมต่อกันผ่าน JWT_SECRET ที่ใช้ร่วมกัน และ Docker network ภายในที่ให้ services สื่อสารกันได้ โดยต้องประสานกันในส่วนของ API contract ระหว่าง services และการตั้งค่า environment variables ให้ตรงกัน
